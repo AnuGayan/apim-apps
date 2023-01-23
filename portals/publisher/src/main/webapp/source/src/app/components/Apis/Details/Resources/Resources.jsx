@@ -29,13 +29,11 @@ import Banner from 'AppComponents/Shared/Banner';
 import API from 'AppData/api';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import PropTypes from 'prop-types';
-import SwaggerParser from '@apidevtools/swagger-parser';
 import { isRestricted } from 'AppData/AuthManager';
 import CONSTS from 'AppData/Constants';
 import Configurations from 'Config';
 import Operation from './components/Operation';
 import GroupOfOperations from './components/GroupOfOperations';
-import SpecErrors from './components/SpecErrors';
 import AddOperation from './components/AddOperation';
 import GoToDefinitionLink from './components/GoToDefinitionLink';
 import APIRateLimiting from './components/APIRateLimiting';
@@ -358,18 +356,17 @@ export default function Resources(props) {
          * We will not alter the provided spec.
          */
         const specCopy = cloneDeep(rawSpec);
-        /*
-        * Used SwaggerParser.validate() because we can get the errors as well.
-        */
-        SwaggerParser.validate(specCopy, (err, result) => {
-            setResolvedSpec(() => {
-                const errors = err ? [err] : [];
-                return {
-                    spec: result,
-                    errors,
-                };
+
+        API.validateOpenAPIByInlineDefinition(specCopy)
+            .then((response) => {
+                setResolvedSpec(() => {
+                    const errors = response.body.errors ? response.body.errors : [];
+                    return {
+                        spec: response.body.info,
+                        errors,
+                    };
+                });
             });
-        });
         operationsDispatcher({ action: 'init', data: rawSpec.paths });
         setOpenAPISpec(rawSpec);
         setSecurityDefScopesFromSpec(rawSpec);
@@ -614,7 +611,6 @@ export default function Resources(props) {
                     <AddOperation operationsDispatcher={operationsDispatcher} />
                 </Grid>
             )}
-            {resolvedSpec.errors.length > 0 && <SpecErrors specErrors={resolvedSpec.errors} />}
             <Grid item md={12}>
                 <Paper>
                     {!disableMultiSelect && (
