@@ -238,11 +238,21 @@ class Utils {
      * @memberof Utils
      */
     static getServiceCatalogSwaggerURL() {
-        return (
-            'https://' +
-            Utils.getCurrentEnvironment().host +
-            Utils.CONST.SERVICE_CATALOG_SWAGGER_YAML
-        );
+        if (Configurations.app.proxy_context_path) {
+            return (
+                'https://' +
+                Utils.getCurrentEnvironment().host +
+                Configurations.app.proxy_context_path +
+                Utils.CONST.SERVICE_CATALOG_SWAGGER_YAML
+            );
+        } else {
+            return (
+                'https://' +
+                Utils.getCurrentEnvironment().host +
+                Utils.CONST.SERVICE_CATALOG_SWAGGER_YAML
+            );
+        }
+        
         // return Utils.CONST.SERVICE_CATALOG_SWAGGER_YAML;
     }
 
@@ -624,7 +634,7 @@ Utils.CONST = {
     LOGOUT_CALLBACK: '/services/auth/callback/logout',
     INTROSPECT: '/services/auth/introspect',
     SERVICE_CATALOG_SWAGGER_YAML: '/api/am/service-catalog/v1/oas.yaml',
-    SWAGGER_YAML: '/api/am/publisher/v3/swagger.yaml',
+    SWAGGER_YAML: '/api/am/publisher/v4/swagger.yaml',
     PROTOCOL: 'https://',
     API_CLIENT: 'apiClient',
     SERVICE_CATALOG_CLIENT: 'serviceCatalogClient',

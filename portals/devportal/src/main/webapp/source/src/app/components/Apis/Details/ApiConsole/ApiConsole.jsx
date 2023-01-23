@@ -506,7 +506,7 @@ class ApiConsole extends React.Component {
                             <Grid item md={6}>
                                 <Paper className={classes.userNotificationPaper}>
                                     <Typography variant='h5' component='h3'>
-                                        <Icon>warning</Icon>
+                                        <Icon>info</Icon>
                                         {' '}
                                         <FormattedMessage id='notice' defaultMessage='Notice' />
                                     </Typography>
@@ -570,7 +570,6 @@ class ApiConsole extends React.Component {
                                         defaultMessage='Postman collection'
                                     />
                                 </Button>
-
                             </Grid>
                             <Grid xs={2} item>
                                 <a href={downloadLink} download={fileName}>

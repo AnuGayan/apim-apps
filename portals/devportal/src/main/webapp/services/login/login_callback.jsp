@@ -95,7 +95,6 @@
             }
         }
         if((state != null) && (isAnonymousEnabled == true)){
-            System.out.println("Redirecting to: "+state);
             response.sendRedirect(postLogoutRedirectURI + "?referrer=" + state);
         } else {
             response.sendRedirect(postLogoutRedirectURI);
@@ -126,6 +125,10 @@
         String base64encoded = Base64.getEncoder().encodeToString(byteValue);
         String tokenEndpoint = Util.getLoopbackOrigin((String) Util.readJsonObj(settings, "app.origin.host")) + TOKEN_URL_SUFFIX;
         String data = "code=" + request.getParameter("code") + "&grant_type=authorization_code&redirect_uri=" + loginCallbackUrl;
+        String codeVerifier = (String) session.getAttribute("code_verifier");
+        if (codeVerifier != null) {
+            data = data + "&code_verifier=" + codeVerifier;
+        }
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest post = HttpRequest.newBuilder()
                 .uri(URI.create(tokenEndpoint))
@@ -135,6 +138,7 @@
                 .build();
         HttpResponse<String> result = client.send(post, HttpResponse.BodyHandlers.ofString());
         response.setContentType("application/json");
+        session.removeAttribute("code_verifier");
         Map tokenResponse;
         try {
             tokenResponse = gson.fromJson(result.body(), Map.class);

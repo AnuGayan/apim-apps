@@ -24,12 +24,14 @@ import AddNewRoleSelectPermissionPage from "./pages/carbon/AddNewRoleSelectPermi
 import ScopeAssignmentsPage from "./pages/adminPortal/ScopeAssignmentsPage";
 import UsersManagementPage from "./pages/carbon/UsersManagementPage";
 import RolesManagementPage from "./pages/carbon/RolesManagementPage";
+import ApisHomePage from "./pages/publisher/ApisHomePage";
 
 const usersManagementPage = new UsersManagementPage();
 const rolesManagementPage = new RolesManagementPage();
 const addNewRolePage = new AddNewRoleEnterDetailsPage();
 const selectPermission = new AddNewRoleSelectPermissionPage();
 const scopeAssignmentsPage = new ScopeAssignmentsPage();
+const apisHomePage = new ApisHomePage();
 
 Cypress.Commands.add('carbonLogin', (username, password) => {
     Cypress.log({
@@ -154,7 +156,7 @@ Cypress.Commands.add('deleteApi', (name, version) => {
         cy.get(`[data-testid="${cardName}"]`).get(`[data-testid="${actionCardName}"]`).within(($panel) => {
             cy.get("#itest-id-deleteapi-icon-button", { timeout: 30000 }).click();
           }) 
-        cy.get("#itest-id-deleteconf",{timeout:30000}).click();
+        cy.get("#itest-id-deleteconf",{ timeout:30000 }).click();
     });
 });
 
@@ -317,8 +319,10 @@ Cypress.Commands.add('addBusinessInfo', (businessOwnerName,businessOwnerEmail,te
  * @param {boolean} required  true | false
  */
 
-Cypress.Commands.add('createResource', (ratelimitlevel, limitinglevel,httpverb,uripattern,description=null,summary=null,security=true,scope,parametername=null,parametertype=null,datatype=null,required=false) => {
-    const uriId=httpverb.toLowerCase()+'\/'+uripattern;
+Cypress.Commands.add('createResource', (ratelimitlevel, limitinglevel, httpverb, uripattern, description=null,
+    summary=null, security=true, scope, parametername=null, parametertype=null, datatype=null, required=false) => {
+
+    const uriId = httpverb.toLowerCase() + '\/' + uripattern;
 
     if(ratelimitlevel=="api"){
         cy.get('#api-rate-limiting-api-level').click();
@@ -488,15 +492,15 @@ Cypress.Commands.add('createLocalScope', (name, displayname='sample display name
 })
 
 
-Cypress.Commands.add('createAPIWithoutEndpoint', (name=null,version=null,type = 'REST') => {
+Cypress.Commands.add('createAPIWithoutEndpoint', (name = null,version = null,type = 'REST') => {
     const random_number = Math.floor(Date.now() / 1000);
-    var apiVersion=`v${random_number}`;
+    var apiVersion = `v${random_number}`;
     var apiName = `0sample_api_${random_number}`;
     if(name){
-        apiName=name;
+        apiName = name;
     }
     if(version){
-        apiVersion=version;
+        apiVersion = version;
     }
     cy.visit(`/publisher/apis`);
     cy.get('#itest-create-api-menu-button', {timeout: Cypress.config().largeTimeout});
@@ -644,7 +648,7 @@ Cypress.Commands.add('publishSolaceApi', (apiName = null) => {
 
     cy.visit(`${Utils.getAppOrigin()}/publisher/apis`);
 
-    cy.contains('WSO2 API-M v4.1.0');
+    cy.contains('WSO2 API-M v4.2.0');
         cy.wait(5000);
         cy.get("body").then($body => {
             if ($body.find("#itest-apis-welcome-msg").length > 0) {
@@ -699,7 +703,7 @@ Cypress.Commands.add('publishSolaceApi', (apiName = null) => {
     cy.get('#panel2a-header h6').contains('apim/car-co/api/V1/json/{region_id}/{make}/{model}/{vin}/{event_type}').should('exist');
     cy.get('[data-testid="itest-api-config"]').click();
 
-    cy.intercept('GET','/api/am/publisher/v3/settings',{fixture : 'solaceEnvironmentResponse.json'}).as('getSettings');
+    cy.intercept('GET','/api/am/publisher/v4/settings',{fixture : 'solaceEnvironmentResponse.json'}).as('getSettings');
     cy.reload();
     //Check solace deployments and deploy
     cy.get('#left-menu-itemdeployments').click();
@@ -710,7 +714,7 @@ Cypress.Commands.add('publishSolaceApi', (apiName = null) => {
         cy.get('[data-testid="api-org-name"] input').should('have.value','wso2dev');
         cy.get('#deploy-btn-solace').click({force:true});
         cy.intercept('**/deploy-revision**', { statusCode: 201, fixture: 'api_artifacts/solaceDeployedStatus.json' }).as('deployedStatus');
-        cy.intercept('/api/am/publisher/v3/apis/*/revisions**', { statusCode: 200, fixture: 'api_artifacts/solaceDeployedQuery.json' }).as('deployedRevision');
+        cy.intercept('/api/am/publisher/v4/apis/*/revisions**', { statusCode: 200, fixture: 'api_artifacts/solaceDeployedQuery.json' }).as('deployedRevision');
         cy.wait('@deployedStatus');
         cy.wait('@deployedRevision');
 
@@ -725,18 +729,18 @@ Cypress.Commands.add('publishSolaceApi', (apiName = null) => {
 
 Cypress.Commands.add('viewSolaceApi', (apiName = null) => {
 
-    cy.intercept('GET','/api/am/devportal/v2/apis?limit=10&offset=0',{fixture:'api_artifacts/publishedApis.json'}).as('publishedApis');
-    cy.intercept('GET','/api/am/devportal/v2/apis/27dea111-28a9-44a5-a14d-87f6ca61bd2e',{fixture:'api_artifacts/mockSolaceApi.json'}).as('mockSolaceApi');
-    cy.intercept('GET','/api/am/devportal/v2/apis/27dea111-28a9-44a5-a14d-87f6ca61bd2e/ratings',{statusCode:200,fixture:'api_artifacts/solaceApiRatings.json'});
-    cy.intercept('GET','/api/am/devportal/v2/apis/27dea111-28a9-44a5-a14d-87f6ca61bd2e/thumbnail',{statusCode:204});
-    cy.intercept('GET','/api/am/devportal/v2/subscriptions**',{fixture:'api_artifacts/solaceApiSubscriptionsOverview.json'}).as('solaceApiSubscriptionsOverview');
-    cy.intercept('GET','/api/am/devportal/v2/subscriptions?apiId=27dea111-28a9-44a5-a14d-87f6ca61bd2e&limit=25',{fixture:'api_artifacts/solaceApiSubscriptionsLimit25.json'}).as('solaceApiSubscriptionsLimit25');
-    cy.intercept('GET','/api/am/devportal/v2/subscriptions?apiId=27dea111-28a9-44a5-a14d-87f6ca61bd2e&limit=5000',{fixture:'api_artifacts/solaceApiSubscriptionsLimit5000.json'}).as('solaceApiSubscriptionsLimit5000');
-    cy.intercept('GET','/api/am/devportal/v2/apis/27dea111-28a9-44a5-a14d-87f6ca61bd2e/comments**',{statusCode:200});
-    cy.intercept('GET','/api/am/devportal/v2/applications?limit=5000',{fixture:'api_artifacts/solaceApiApplications.json'});
-    cy.intercept('GET','/api/am/devportal/v2/apis/27dea111-28a9-44a5-a14d-87f6ca61bd2e/documents',{fixture:'api_artifacts/solaceApiDocuments.json'});
-    cy.intercept('GET','/api/am/devportal/v2/settings',{fixture:'api_artifacts/solaceApiSettings.json'}).as('solaceApiSettings');
-    cy.intercept('GET','/api/am/devportal/v2/throttling-policies/subscription',{fixture:'api_artifacts/solaceApiThrottling.json'}).as('solaceApiThrottling');
+    cy.intercept('GET','/api/am/devportal/v3/apis?limit=10&offset=0',{fixture:'api_artifacts/publishedApis.json'}).as('publishedApis');
+    cy.intercept('GET','/api/am/devportal/v3/apis/27dea111-28a9-44a5-a14d-87f6ca61bd2e',{fixture:'api_artifacts/mockSolaceApi.json'}).as('mockSolaceApi');
+    cy.intercept('GET','/api/am/devportal/v3/apis/27dea111-28a9-44a5-a14d-87f6ca61bd2e/ratings',{statusCode:200,fixture:'api_artifacts/solaceApiRatings.json'});
+    cy.intercept('GET','/api/am/devportal/v3/apis/27dea111-28a9-44a5-a14d-87f6ca61bd2e/thumbnail',{statusCode:204});
+    cy.intercept('GET','/api/am/devportal/v3/subscriptions**',{fixture:'api_artifacts/solaceApiSubscriptionsOverview.json'}).as('solaceApiSubscriptionsOverview');
+    cy.intercept('GET','/api/am/devportal/v3/subscriptions?apiId=27dea111-28a9-44a5-a14d-87f6ca61bd2e&limit=25',{fixture:'api_artifacts/solaceApiSubscriptionsLimit25.json'}).as('solaceApiSubscriptionsLimit25');
+    cy.intercept('GET','/api/am/devportal/v3/subscriptions?apiId=27dea111-28a9-44a5-a14d-87f6ca61bd2e&limit=5000',{fixture:'api_artifacts/solaceApiSubscriptionsLimit5000.json'}).as('solaceApiSubscriptionsLimit5000');
+    cy.intercept('GET','/api/am/devportal/v3/apis/27dea111-28a9-44a5-a14d-87f6ca61bd2e/comments**',{statusCode:200});
+    cy.intercept('GET','/api/am/devportal/v3/applications?limit=5000',{fixture:'api_artifacts/solaceApiApplications.json'});
+    cy.intercept('GET','/api/am/devportal/v3/apis/27dea111-28a9-44a5-a14d-87f6ca61bd2e/documents',{fixture:'api_artifacts/solaceApiDocuments.json'});
+    cy.intercept('GET','/api/am/devportal/v3/settings',{fixture:'api_artifacts/solaceApiSettings.json'}).as('solaceApiSettings');
+    cy.intercept('GET','/api/am/devportal/v3/throttling-policies/subscription',{fixture:'api_artifacts/solaceApiThrottling.json'}).as('solaceApiThrottling');
 
     cy.wait('@publishedApis',{ timeout:10000}).then(()=> {
         cy.get('[data-testid="solace-label"]').should('exist');
@@ -951,7 +955,7 @@ Cypress.Commands.add('addNewUserUsingSelfSignUp', (username, password, firstName
     cy.get('[name="http://wso2.org/claims/emailaddress"]').type(email);
     cy.get('#termsCheckbox').check();
     cy.get('#registrationSubmit').click();
-    cy.contains('User registration completed successfully').should('exist');
+    cy.contains('Confirmation link has been sent to your email').should('exist');
     cy.get('[type="button"]').click();
 })
 
@@ -976,7 +980,7 @@ Cypress.Commands.add('updateTenantConfig', (username, password, tenant, config) 
     })
     // Try to improve this
     // Better to modify the API response accordingly instead of mocking the entire API call
-    cy.intercept('GET', 'https://localhost:9443/api/am/admin/v3/tenant-config', {
+    cy.intercept('GET', 'https://localhost:9443/api/am/admin/v4/tenant-config', {
         statusCode: 200,
         body: config
     });
@@ -1005,7 +1009,7 @@ Cypress.Commands.add('portalLoginUsingIncorrectUserCredentials', (username, pass
     cy.get('[data-testid=login-page-username-input]').type(username);
     cy.get('[data-testid=login-page-password-input]').type(password);
     cy.get('#loginForm').submit();
-    cy.contains('Login failed! Please recheck the username and password and try again.').should('exist');
+    cy.contains('Login failed! Please check your username and password and try again.').should('exist');
 })
 
 Cypress.Commands.add('disableSelfSignUpInCarbonPortal', (username, password, tenant = 'carbon.super') => {
@@ -1055,3 +1059,54 @@ Cypress.Commands.add('checkUserHasGivenRoles', (username, password, tenant = 'ca
     }
     cy.carbonLogout();
 })
+
+Cypress.Commands.add('createAPIByRestAPIDesignAndSearch', (name = null, version = null, context = null) => {
+    const random_number = Math.floor(Date.now() / 1000);
+
+    const apiName = name ? name : `0sample_api_${random_number}`;
+    const apiVersion = version ? version : `v${random_number}`;
+    const apiContext = context ? context : `/sample_context_${random_number}`;
+    cy.visit(`/publisher/apis/create/rest`);
+    cy.get('#itest-id-apiname-input').type(apiName);
+    cy.get('#itest-id-apicontext-input').click();
+    cy.get('#itest-id-apicontext-input').type(apiContext);
+    cy.get('#itest-id-apiversion-input').click();
+    cy.get('#itest-id-apiversion-input').type(apiVersion);
+    cy.get('#itest-id-apiendpoint-input').click();
+    cy.get('#itest-id-apiendpoint-input').type(`https://apis.wso2.com/sample${random_number}`);
+    cy.get('#itest-create-default-api-button').click();
+    // There is a UI error in the console. We need to skip this so that the test will not fail.
+    Cypress.on('uncaught:exception', (err, runnable) => {
+        // returning false here prevents Cypress from
+        // failing the test
+        return false
+    });
+    apisHomePage.waitUntillPublisherLoadingSpinnerExit();
+    cy.wait(5000);
+    cy.visit(`/publisher/apis/`);
+    apisHomePage.waitUntillPublisherLoadingSpinnerExit();
+    apisHomePage.getSearchTestBox().clear().type(apiName).type("{enter}");
+    apisHomePage.waitUntillPublisherLoadingSpinnerExit();
+    cy.wait(2000);
+    cy.get(`#${apiName}`, {timeout: Cypress.config().largeTimeout}).click();
+
+    cy.get('#itest-api-name-version', { timeout: 30000 }).should('be.visible');
+    cy.get('#itest-api-name-version').contains(apiVersion);
+})
+
+Cypress.Commands.add('searchAndDeleteApi', (name, version) => {
+    var cardName='card-'+name+version;
+    var actionCardName='card-action-'+name+version;
+    cy.intercept('**/apis*').as('getApis');
+    cy.visit(`/publisher/apis`);
+    apisHomePage.waitUntillPublisherLoadingSpinnerExit();
+    apisHomePage.getSearchTestBox().clear().type(name).type("{enter}");
+    apisHomePage.waitUntillPublisherLoadingSpinnerExit();
+    cy.wait(2000);
+    cy.wait('@getApis', {timeout: Cypress.config().largeTimeout}).then(() => {
+        cy.get(`[data-testid="${cardName}"]`).get(`[data-testid="${actionCardName}"]`).within(($panel) => {
+            cy.get("#itest-id-deleteapi-icon-button", { timeout: 30000 }).click();
+          }) 
+        cy.get("#itest-id-deleteconf",{timeout:30000}).click();
+    });
+});

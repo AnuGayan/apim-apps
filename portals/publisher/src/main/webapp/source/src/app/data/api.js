@@ -19,7 +19,8 @@ import APIClientFactory from './APIClientFactory';
 import Utils from './Utils';
 import Resource from './Resource';
 import cloneDeep from 'lodash.clonedeep';
-import Configurations from '../../../../site/public/conf/settings.json';
+
+const Configurations = require('Config');
 
 /**
  * An abstract representation of an API
@@ -774,8 +775,14 @@ class API extends Resource {
                 file: swagger,
                 'Content-Type': 'multipart/form-data',
             };
+            const requestBody = {
+                requestBody: {
+                    file: swagger,
+                },
+            };
             return client.apis['Validation'].validateOpenAPIDefinition(
                 payload,
+                requestBody,
                 this._requestMetaData({
                     'Content-Type': 'multipart/form-data',
                 }),
