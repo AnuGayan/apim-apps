@@ -1,4 +1,6 @@
 /* eslint-disable max-len */
+import { grey } from "@mui/material/colors";
+
 const DefaultConfigurations = {
     direction: 'ltr',
     palette: {
@@ -13,6 +15,9 @@ const DefaultConfigurations = {
             main: '#415a85',
             // dark: will be calculated from palette.secondary.main,
             contrastText: '#ffcc00',
+        },
+        grey: {
+            main: grey[900]
         },
         background: {
             default: '#ffffff',
@@ -135,7 +140,7 @@ const DefaultConfigurations = {
                 b: '#605F42',
                 c: '#474675',
                 d: '#F39137',
-                e: '#ffd454',
+                e: '#A38836',
                 f: '#308BB7',
                 g: '#1B3FA3',
                 h: '#559839',

@@ -17,6 +17,30 @@
       "value": "Cancel"
     }
   ],
+  "Actions": [
+    {
+      "type": 0,
+      "value": "Actions"
+    }
+  ],
+  "Active.Deployment.Available": [
+    {
+      "type": 0,
+      "value": "An active deployment is available"
+    }
+  ],
+  "Active.Deployments.Available": [
+    {
+      "type": 0,
+      "value": "Active deployments are available"
+    }
+  ],
+  "Adding.Policy.Mapping.Error": [
+    {
+      "type": 0,
+      "value": "Error occurred while adding the policy mapping"
+    }
+  ],
   "Api.category.dropdown.tooltip": [
     {
       "type": 0,
@@ -104,7 +128,7 @@
   "Apis.Create.APIProduct.APIProductCreateWrapper.sub.heading": [
     {
       "type": 0,
-      "value": "Create an API Product by providing a Name, a Context, Resources, and Business Plans (optional)."
+      "value": "Create an API Product by providing a Name, a Context, a Version, Resources, and Business Plans (optional)."
     }
   ],
   "Apis.Create.AsyncAPI.ApiCreateAsyncAPI.advertiseOnly.warning": [
@@ -211,6 +235,12 @@
     {
       "type": 0,
       "value": "Context"
+    }
+  ],
+  "Apis.Create.Components.DefaultAPIForm.api.product.version": [
+    {
+      "type": 0,
+      "value": "Version"
     }
   ],
   "Apis.Create.Components.DefaultAPIForm.name": [
@@ -489,6 +519,30 @@
       "value": "Input Type"
     }
   ],
+  "Apis.Create.OpenAPI.Steps.ValidationResults.linter.results": [
+    {
+      "type": 0,
+      "value": "Linter Results"
+    }
+  ],
+  "Apis.Create.OpenAPI.Steps.ValidationResults.linting": [
+    {
+      "type": 0,
+      "value": "Generating Linter Results"
+    }
+  ],
+  "Apis.Create.OpenAPI.Steps.ValidationResults.validating": [
+    {
+      "type": 0,
+      "value": "Validating API definition"
+    }
+  ],
+  "Apis.Create.OpenAPI.Steps.ValidationResults.validation.errros": [
+    {
+      "type": 0,
+      "value": "Validation Errors"
+    }
+  ],
   "Apis.Create.StreamingAPI.APICreateStreamingAPI.api.heading": [
     {
       "type": 0,
@@ -510,13 +564,7 @@
   "Apis.Create.WSDL.ApiCreateWSDL.deprecated.msg": [
     {
       "type": 0,
-      "value": "This feature is deprecated. Please use the WSO2 Integration Studio as an alternative"
-    }
-  ],
-  "Apis.Create.WSDL.ApiCreateWSDL.deprecated.msg.info.link.msg": [
-    {
-      "type": 0,
-      "value": "Integration Studio Documentation:"
+      "value": "APIM supports only a limited set of capabilities with this feature. If you want to process complex WSDL/XML schema, please refer to the following documentation."
     }
   ],
   "Apis.Create.WSDL.ApiCreateWSDL.error.policies.not.available": [
@@ -619,6 +667,12 @@
       "value": "Protocol"
     }
   ],
+  "Apis.Details.\n                                                                                            Environments.Environments.\n                                                                                            pending.chip": [
+    {
+      "type": 0,
+      "value": "Pending"
+    }
+  ],
   "Apis.Details.\n                                                                                Environments.deploy.vhost": [
     {
       "type": 0,
@@ -691,6 +745,12 @@
       "value": "Convert to"
     }
   ],
+  "Apis.Details.APIDefinition.APIDefinition.documents.swagger.editor.import.content": [
+    {
+      "type": 0,
+      "value": "Import Content"
+    }
+  ],
   "Apis.Details.APIDefinition.APIDefinition.documents.swagger.editor.update.content": [
     {
       "type": 0,
@@ -707,6 +767,18 @@
     {
       "type": 0,
       "value": "Edit"
+    }
+  ],
+  "Apis.Details.APIDefinition.APIDefinition.editor.drawer.toggle.linter": [
+    {
+      "type": 0,
+      "value": "Linter"
+    }
+  ],
+  "Apis.Details.APIDefinition.APIDefinition.editor.drawer.toggle.swagger": [
+    {
+      "type": 0,
+      "value": "Swagger"
     }
   ],
   "Apis.Details.APIDefinition.APIDefinition.error.updating.graphQL.schema": [
@@ -761,6 +833,12 @@
     {
       "type": 0,
       "value": "Cancel"
+    }
+  ],
+  "Apis.Details.APIDefinition.APIDefinition.import.definition.edit": [
+    {
+      "type": 0,
+      "value": "Edit and Import"
     }
   ],
   "Apis.Details.APIDefinition.APIDefinition.import.definition.graphql": [
@@ -1195,6 +1273,50 @@
       "value": "Linting . . ."
     }
   ],
+  "Apis.Details.APIDefinition.Linting.APILintingSummary.loading": [
+    {
+      "type": 0,
+      "value": "Linting . . ."
+    }
+  ],
+  "Apis.Details.APIDefinition.Linting.Linting.custom.ruleset.validation.failed": [
+    {
+      "type": 0,
+      "value": "OpenAPI linter custom ruleset validation failed"
+    }
+  ],
+  "Apis.Details.APIDefinition.Linting.Linting.default.ruleset.validation.failed": [
+    {
+      "type": 0,
+      "value": "OpenAPI linter default ruleset validation failed"
+    }
+  ],
+  "Apis.Details.APIDefinition.Linting.Linting.error.retrieving.custom.rules": [
+    {
+      "type": 0,
+      "value": "Error retrieving custom linter rules"
+    }
+  ],
+  "Apis.Details.APIDefinition.SwaggerEditorDrawer.linter.goodupdate.content": [
+    {
+      "type": 0,
+      "value": "No linting issues found in the definition"
+    }
+  ],
+  "Apis.Details.APIDefinition.SwaggerEditorDrawer.linter.no.resultsupdate.content": [
+    {
+      "type": 0,
+      "value": "No Linter Results"
+    },
+    {
+      "type": 1,
+      "value": "type"
+    },
+    {
+      "type": 0,
+      "value": " found"
+    }
+  ],
   "Apis.Details.APIDefinition.SwaggerEditorDrawer.title": [
     {
       "type": 0,
@@ -1265,6 +1387,18 @@
     {
       "type": 0,
       "value": "Selected Rate Limiting Policy will be applied to all the requests of this API."
+    }
+  ],
+  "Apis.Details.APIProduct.NewVersion.NewVersion.error": [
+    {
+      "type": 0,
+      "value": "Something went wrong while creating a new version!. Error:"
+    }
+  ],
+  "Apis.Details.APIProduct.NewVersion.NewVersion.success": [
+    {
+      "type": 0,
+      "value": "Successfully created new version"
     }
   ],
   "Apis.Details.AccessControl.roles.help": [
@@ -1525,10 +1659,28 @@
       "value": "Edit Complexity Values"
     }
   ],
+  "Apis.Details.Configuration.ApiKeyHeader.helper.text": [
+    {
+      "type": 0,
+      "value": "ApiKey header name cannot contain spaces or special characters"
+    }
+  ],
   "Apis.Details.Configuration.AuthHeader.helper.text": [
     {
       "type": 0,
       "value": "Authorization header name cannot contain spaces or special characters"
+    }
+  ],
+  "Apis.Details.Configuration.Components.APISecurity.Components.\n                                            ApplicationLevel.Client.Websocket": [
+    {
+      "type": 0,
+      "value": "Client Websocket"
+    }
+  ],
+  "Apis.Details.Configuration.Components.APISecurity.Components.\n                                            ApplicationLevel.Websocket": [
+    {
+      "type": 0,
+      "value": "Application Level Security"
     }
   ],
   "Apis.Details.Configuration.Components.APISecurity.Components.\n                                    ApplicationLevel.http": [
@@ -1547,6 +1699,12 @@
     {
       "type": 0,
       "value": "Backend Throughput"
+    }
+  ],
+  "Apis.Details.Configuration.Configuration.ApiKeyHeader.tooltip": [
+    {
+      "type": 0,
+      "value": "The header name that is used to send the api key information. \"ApiKey\" is the default header."
     }
   ],
   "Apis.Details.Configuration.Configuration.AuthHeader.tooltip": [
@@ -1577,6 +1735,12 @@
     {
       "type": 0,
       "value": "Edit API Endpoints"
+    }
+  ],
+  "Apis.Details.Configuration.Configuration.apiKey.header.label": [
+    {
+      "type": 0,
+      "value": "ApiKey Header"
     }
   ],
   "Apis.Details.Configuration.Configuration.auth.header.label": [
@@ -1723,16 +1887,16 @@
       "value": "Backend Websocket"
     }
   ],
-  "Apis.Details.Configuration.RuntimeConfigurationWebSocket.section.client.websocket": [
-    {
-      "type": 0,
-      "value": "Client Websocket"
-    }
-  ],
   "Apis.Details.Configuration.RuntimeConfigurationWebSocket.topic.header": [
     {
       "type": 0,
       "value": "Runtime Configurations"
+    }
+  ],
+  "Apis.Details.Configuration.RuntimeConfigurationWebsocket.RuntimeConfiguration.emptySchemes": [
+    {
+      "type": 0,
+      "value": "Please select at least one API security method."
     }
   ],
   "Apis.Details.Configuration.UpdateWithoutDetails.cancel": [
@@ -2542,7 +2706,7 @@
   "Apis.Details.Documents.CreateEditForm.invalid.document.name.helper.text": [
     {
       "type": 0,
-      "value": "Document name cannot contain spaces or special characters"
+      "value": "Document name cannot contain special characters"
     }
   ],
   "Apis.Details.Documents.CreateEditForm.source": [
@@ -4089,7 +4253,7 @@
       "value": "Responses"
     }
   ],
-  "Apis.Details.Environments\n                                                                                    .deploy.vhost": [
+  "Apis.Details.Environments\n                                                                                        .deploy.vhost": [
     {
       "type": 0,
       "value": "VHost"
@@ -4107,12 +4271,6 @@
       "value": "Deployed Revision"
     }
   ],
-  "Apis.Details.Environments.Environments\n                                                                    .select.table": [
-    {
-      "type": 0,
-      "value": "Select Revision"
-    }
-  ],
   "Apis.Details.Environments.Environments\n                                                                    .select.vhost": [
     {
       "type": 0,
@@ -4120,12 +4278,6 @@
     }
   ],
   "Apis.Details.Environments.Environments\n                                                                .deploy.button": [
-    {
-      "type": 0,
-      "value": "Deploy"
-    }
-  ],
-  "Apis.Details.Environments.Environments.\n                                                                deploy.button": [
     {
       "type": 0,
       "value": "Deploy"
@@ -4149,6 +4301,12 @@
       "value": "Revisions"
     }
   ],
+  "Apis.Details.Environments.Environments.RetiredApi.ToolTip": [
+    {
+      "type": 0,
+      "value": "Can not deploy new revisions for retired API"
+    }
+  ],
   "Apis.Details.Environments.Environments.advertise.only.warning": [
     {
       "type": 0,
@@ -4167,6 +4325,12 @@
       "value": "Name"
     }
   ],
+  "Apis.Details.Environments.Environments.cancel.btn": [
+    {
+      "type": 0,
+      "value": "Cancel"
+    }
+  ],
   "Apis.Details.Environments.Environments.create.cancel": [
     {
       "type": 0,
@@ -4177,6 +4341,12 @@
     {
       "type": 0,
       "value": "Create"
+    }
+  ],
+  "Apis.Details.Environments.Environments.deploy.button": [
+    {
+      "type": 0,
+      "value": "Deploy"
     }
   ],
   "Apis.Details.Environments.Environments.deploy.cancel": [
@@ -4227,10 +4397,10 @@
       "value": "Display in Developer Portal"
     }
   ],
-  "Apis.Details.Environments.Environments.gateway\n                                                    .deployed.revision": [
+  "Apis.Details.Environments.Environments.gateway\n                                                    .deployment.current.revision": [
     {
       "type": 0,
-      "value": "Deployed Revision"
+      "value": "Current Revision"
     }
   ],
   "Apis.Details.Environments.Environments.gateway.accessUrl": [
@@ -4245,7 +4415,19 @@
       "value": "Action"
     }
   ],
-  "Apis.Details.Environments.Environments.revision\n                                                        .description.deploy": [
+  "Apis.Details.Environments.Environments.gateway.deployment.next.revision": [
+    {
+      "type": 0,
+      "value": "Next Revision"
+    }
+  ],
+  "Apis.Details.Environments.Environments.pending.chip": [
+    {
+      "type": 0,
+      "value": "Pending"
+    }
+  ],
+  "Apis.Details.Environments.Environments.revision\n                                                            .description.deploy": [
     {
       "type": 0,
       "value": "Add a description to the revision"
@@ -4393,10 +4575,22 @@
       "value": "count"
     }
   ],
+  "Apis.Details.Environments.Environments.select.table": [
+    {
+      "type": 0,
+      "value": "Select Revision"
+    }
+  ],
   "Apis.Details.Environments.Environments.solace.platform.environments.heading": [
     {
       "type": 0,
       "value": "Solace Platform Environments"
+    }
+  ],
+  "Apis.Details.Environments.Environments.status.not.deployed": [
+    {
+      "type": 0,
+      "value": "No Revision Deployed"
     }
   ],
   "Apis.Details.Environments.Environments.undeploy.btn": [
@@ -4533,6 +4727,12 @@
     {
       "type": 0,
       "value": "Endpoint provided"
+    }
+  ],
+  "Apis.Details.LifeCycle.CheckboxLabels.mandatory.properties.provided": [
+    {
+      "type": 0,
+      "value": "Mandatory Properties provided"
     }
   ],
   "Apis.Details.LifeCycle.LifeCycle.change.not.allowed": [
@@ -4701,6 +4901,18 @@
     {
       "type": 0,
       "value": "See more"
+    }
+  ],
+  "Apis.Details.LifeCycle.components.confirm.publish.apiProducts.message": [
+    {
+      "type": 0,
+      "value": "Deploy the API product before publishing the API"
+    }
+  ],
+  "Apis.Details.LifeCycle.components.confirm.publish.apiProducts.title": [
+    {
+      "type": 0,
+      "value": "Deploy API product before publishing"
     }
   ],
   "Apis.Details.LifeCycle.components.confirm.publish.message": [
@@ -4971,6 +5183,12 @@
     {
       "type": 0,
       "value": "-"
+    }
+  ],
+  "Apis.Details.NewOverview.MetaData.gateway.type": [
+    {
+      "type": 0,
+      "value": "Gateway Type"
     }
   ],
   "Apis.Details.NewOverview.MetaData.last.updated.time": [
@@ -5303,7 +5521,7 @@
       "value": "Operation"
     }
   ],
-  "Apis.Details.Overview.\n                                                                    CustomizedStepper.Endpoint": [
+  "Apis.Details.Overview.\n                                                                        CustomizedStepper.Endpoint": [
     {
       "type": 0,
       "value": "Endpoint"
@@ -5331,6 +5549,18 @@
     {
       "type": 0,
       "value": "Business Plan"
+    }
+  ],
+  "Apis.Details.Overview.CustomizedStepper.ToolTip.DeploymentAvailable": [
+    {
+      "type": 0,
+      "value": "Cannot deploy retired APIs"
+    }
+  ],
+  "Apis.Details.Overview.CustomizedStepper.ToolTip.DeploymentUnavailable": [
+    {
+      "type": 0,
+      "value": "Deploy a revision of this API to the Gateway"
     }
   ],
   "Apis.Details.Overview.CustomizedStepper.blocked": [
@@ -5565,12 +5795,6 @@
       "value": " API product(s)"
     }
   ],
-  "Apis.Details.Policies.Policies.cc.info.title": [
-    {
-      "type": 0,
-      "value": "Choreo Connect supports resource level request and response flow policies only."
-    }
-  ],
   "Apis.Details.Policies.Policies.title": [
     {
       "type": 0,
@@ -5593,6 +5817,12 @@
     {
       "type": 0,
       "value": "Response Flow"
+    }
+  ],
+  "Apis.Details.Policies.PoliciesSection.info": [
+    {
+      "type": 0,
+      "value": "API level policies will execute before operation level policies"
     }
   ],
   "Apis.Details.Policies.PolicyConfigurationEditDrawer.title": [
@@ -5649,6 +5879,12 @@
     {
       "type": 0,
       "value": "Name"
+    }
+  ],
+  "Apis.Details.Policies.PolicyForm.GeneralDetails.form.supported.api.label": [
+    {
+      "type": 0,
+      "value": "Supported API Types"
     }
   ],
   "Apis.Details.Policies.PolicyForm.GeneralDetails.form.version.helperText": [
@@ -5991,13 +6227,25 @@
       "value": "Show in devportal"
     }
   ],
+  "Apis.Details.Properties.\n                                                    Properties.editable.show.in.devporal": [
+    {
+      "type": 0,
+      "value": "Show in devportal"
+    }
+  ],
+  "Apis.Details.Properties.Properties.\n                                                                            show.add.property.custom.property.name": [
+    {
+      "type": 1,
+      "value": "message"
+    }
+  ],
   "Apis.Details.Properties.Properties.\n                                                                    show.add.property.invalid.error": [
     {
       "type": 0,
       "value": "Invalid property name"
     }
   ],
-  "Apis.Details.Properties.Properties.\n                                                                show.add.property.property.name": [
+  "Apis.Details.Properties.Properties.\n                                                            show.add.property.property.name": [
     {
       "type": 0,
       "value": "Name"
@@ -6335,6 +6583,12 @@
       "value": "AWS Lambda Settings"
     }
   ],
+  "Apis.Details.Resources.components.operationComponents.AWSLambdaSettings.encode": [
+    {
+      "type": 0,
+      "value": "Check if request body should be base64 encoded"
+    }
+  ],
   "Apis.Details.Resources.components.operationComponents.AddParameter.add": [
     {
       "type": 0,
@@ -6545,18 +6799,6 @@
       "value": "This will enable/disable Application Level securities defined in the Runtime Configurations page."
     }
   ],
-  "Apis.Details.Resources.components.operationComponents.OperationGovernance.operation.no.api.scope.available": [
-    {
-      "type": 0,
-      "value": "No API scopes available"
-    }
-  ],
-  "Apis.Details.Resources.components.operationComponents.OperationGovernance.operation.no.sharedpi.scope.available": [
-    {
-      "type": 0,
-      "value": "No shared scopes available"
-    }
-  ],
   "Apis.Details.Resources.components.operationComponents.OperationGovernance.operation.scope.create.new.scope": [
     {
       "type": 0,
@@ -6579,18 +6821,6 @@
     {
       "type": 0,
       "value": "No scope available"
-    }
-  ],
-  "Apis.Details.Resources.components.operationComponents.OperationGovernance.operation.scope.select.local": [
-    {
-      "type": 0,
-      "value": "API Scopes"
-    }
-  ],
-  "Apis.Details.Resources.components.operationComponents.OperationGovernance.operation.scope.select.shared": [
-    {
-      "type": 0,
-      "value": "Shared Scopes"
     }
   ],
   "Apis.Details.Resources.components.operationComponents.OperationGovernance.rate.limiting.API.level": [
@@ -7355,18 +7585,6 @@
       "value": "This will enable/disable Application Level securities defined in the Runtime Configurations page."
     }
   ],
-  "Apis.Details.Topics.components.operationComponents.OperationGovernance.operation.no.api.scope.available": [
-    {
-      "type": 0,
-      "value": "No API scopes available"
-    }
-  ],
-  "Apis.Details.Topics.components.operationComponents.OperationGovernance.operation.no.sharedpi.scope.available": [
-    {
-      "type": 0,
-      "value": "No shared scopes available"
-    }
-  ],
   "Apis.Details.Topics.components.operationComponents.OperationGovernance.operation.scope.create.new.scope": [
     {
       "type": 0,
@@ -7389,18 +7607,6 @@
     {
       "type": 0,
       "value": "No scope available"
-    }
-  ],
-  "Apis.Details.Topics.components.operationComponents.OperationGovernance.operation.scope.select.local": [
-    {
-      "type": 0,
-      "value": "API Scopes"
-    }
-  ],
-  "Apis.Details.Topics.components.operationComponents.OperationGovernance.operation.scope.select.shared": [
-    {
-      "type": 0,
-      "value": "Shared Scopes"
     }
   ],
   "Apis.Details.Topics.components.operationComponents.OperationGovernance.subTitle": [
@@ -7541,6 +7747,24 @@
     {
       "type": 1,
       "value": "type"
+    }
+  ],
+  "Apis.Details.environments.deploymentOnBoarding.formattedMessage.description": [
+    {
+      "type": 0,
+      "value": "It is not possible to deploy new revisions for retired APIs."
+    }
+  ],
+  "Apis.Details.environments.deploymentOnBoarding.formattedMessage.head": [
+    {
+      "type": 0,
+      "value": "Deployments"
+    }
+  ],
+  "Apis.Details.environments.deploymentOnBoarding.formattedMessage.warningTitle": [
+    {
+      "type": 0,
+      "value": "Can not deploy retired APIs"
     }
   ],
   "Apis.Details.index.Tryout.menu.name": [
@@ -7773,6 +7997,24 @@
       "value": "Context"
     }
   ],
+  "Apis.Listing.ApiThumb.owners": [
+    {
+      "type": 0,
+      "value": "Owners"
+    }
+  ],
+  "Apis.Listing.ApiThumb.owners.business": [
+    {
+      "type": 0,
+      "value": "Business"
+    }
+  ],
+  "Apis.Listing.ApiThumb.owners.technical": [
+    {
+      "type": 0,
+      "value": "Technical"
+    }
+  ],
   "Apis.Listing.ApiThumb.version": [
     {
       "type": 0,
@@ -7969,6 +8211,12 @@
     {
       "type": 0,
       "value": "Deploying sample API ..."
+    }
+  ],
+  "Apis.Listing.SampleAPI.popup.deploy.pending": [
+    {
+      "type": 0,
+      "value": "API revision deployment request sent"
     }
   ],
   "Apis.Listing.SampleAPI.popup.publish.complete": [
@@ -8308,7 +8556,7 @@
   "Base.Footer.Footer.product_details": [
     {
       "type": 0,
-      "value": "WSO2 API-M v4.1.0 | © 2022 WSO2 LLC"
+      "value": "WSO2 API-M v4.3.0 | © 2024 WSO2 LLC"
     }
   ],
   "Base.Header.avatar.Avatar.logout": [
@@ -8419,10 +8667,28 @@
       "value": "Policies"
     }
   ],
+  "Base.Header.navbar.GlobalNavBar.global.policies": [
+    {
+      "type": 0,
+      "value": "Global Policies"
+    }
+  ],
   "Base.Header.navbar.GlobalNavBar.scopes": [
     {
       "type": 0,
       "value": "Scopes"
+    }
+  ],
+  "Cancel": [
+    {
+      "type": 0,
+      "value": "Cancel"
+    }
+  ],
+  "Cannot.Find.PolicyObj.For.PolicyId": [
+    {
+      "type": 0,
+      "value": "Cannot find policy for Id:"
     }
   ],
   "CommonPolicies.CreatePolicy.breadcrumb.create.new.policy": [
@@ -8553,10 +8819,82 @@
       "value": "Policies"
     }
   ],
+  "Confirm.Delete": [
+    {
+      "type": 0,
+      "value": "Confirm Deletion"
+    }
+  ],
+  "Confirm.Delete.Verify": [
+    {
+      "type": 0,
+      "value": "Are you sure you want to delete the policy?"
+    }
+  ],
+  "Confirm.Deploy": [
+    {
+      "type": 0,
+      "value": "Confirm Deployment"
+    }
+  ],
+  "Confirm.Deploy.Verify": [
+    {
+      "type": 0,
+      "value": "Are you sure you want to depoly the policy in the selected gateways?"
+    }
+  ],
+  "Confirm.UnDeploy": [
+    {
+      "type": 0,
+      "value": "Confirm Undeployment"
+    }
+  ],
+  "Confirm.Undeploy.Verify": [
+    {
+      "type": 0,
+      "value": "Are you sure you want to undepoly the policy?"
+    }
+  ],
   "Connection.Timeout": [
     {
       "type": 0,
       "value": "Connection Timeout"
+    }
+  ],
+  "Delete": [
+    {
+      "type": 0,
+      "value": "Delete"
+    }
+  ],
+  "Deploy": [
+    {
+      "type": 0,
+      "value": "Deploy"
+    }
+  ],
+  "Deploy.Helper": [
+    {
+      "type": 0,
+      "value": "If another global policy is already deployed to a gateway, that gateway will not be available for deployment of this policy. Please undeploy the previously deployed global policy first."
+    }
+  ],
+  "Deployed.Gateway.Listing.Table.Header.Description": [
+    {
+      "type": 0,
+      "value": "Description"
+    }
+  ],
+  "Deployed.Gateway.Listing.Table.Header.Name": [
+    {
+      "type": 0,
+      "value": "Deployed Gateways"
+    }
+  ],
+  "Deployed.Gateway.Listing.Table.Not.Available": [
+    {
+      "type": 0,
+      "value": "No deployed gateways"
     }
   ],
   "Endpoint.Suspension.State": [
@@ -8565,10 +8903,222 @@
       "value": "Endpoint Suspension State"
     }
   ],
+  "Error.Deploy.Policy": [
+    {
+      "type": 0,
+      "value": "Error occurred while deploying the policy"
+    }
+  ],
+  "Error.Retrieve.Policy": [
+    {
+      "type": 0,
+      "value": "Error occurred while retrieving the policy"
+    }
+  ],
+  "Error.Retrieve.Policy.List": [
+    {
+      "type": 0,
+      "value": "Error occurred while retrieving the policy list"
+    }
+  ],
+  "Error.Undeploy.Policy": [
+    {
+      "type": 0,
+      "value": "Error occurred while undeploying the policy"
+    }
+  ],
+  "Error.Validating.Regex": [
+    {
+      "type": 0,
+      "value": "Error while validating the regex"
+    }
+  ],
   "Error.while.validating.the.imported.graphQLSchema": [
     {
       "type": 0,
       "value": "Error while validating the imported schema"
+    }
+  ],
+  "Fault.Details.Policies.PolicyList.Title": [
+    {
+      "type": 0,
+      "value": "Fault"
+    }
+  ],
+  "Fetching.Policies.Error": [
+    {
+      "type": 0,
+      "value": "Error while fetching policies"
+    }
+  ],
+  "Fetching.Policies.Settings": [
+    {
+      "type": 0,
+      "value": "Error while fetching settings"
+    }
+  ],
+  "Global.Details.Policies.AttachedPolicyCard.apiSpecificPolicy.download.error": [
+    {
+      "type": 0,
+      "value": "Something went wrong while downloading the policy"
+    }
+  ],
+  "Global.Details.Policies.AttachedPolicyCard.commonPolicy.download.error": [
+    {
+      "type": 0,
+      "value": "Something went wrong while downloading the policy"
+    }
+  ],
+  "Global.Details.Policies.AttachedPolicyForm.General.cancel": [
+    {
+      "type": 0,
+      "value": "Cancel"
+    }
+  ],
+  "Global.Details.Policies.AttachedPolicyForm.General.description.title": [
+    {
+      "type": 0,
+      "value": "Description"
+    }
+  ],
+  "Global.Details.Policies.AttachedPolicyForm.General.description.value.not.provided": [
+    {
+      "type": 0,
+      "value": "Oops! Looks like this policy does not have a description"
+    }
+  ],
+  "Global.Details.Policies.AttachedPolicyForm.General.description.value.provided": [
+    {
+      "type": 1,
+      "value": "description"
+    }
+  ],
+  "Global.Details.Policies.AttachedPolicyForm.General.reset": [
+    {
+      "type": 0,
+      "value": "Reset"
+    }
+  ],
+  "Global.Details.Policies.AttachedPolicyForm.General.save": [
+    {
+      "type": 0,
+      "value": "Save"
+    }
+  ],
+  "Global.Details.Policies.AttachedPolicyForm.General.saving": [
+    {
+      "type": 0,
+      "value": "Saving"
+    }
+  ],
+  "Global.Details.Policies.DraggablePolicyCard.policy.view": [
+    {
+      "type": 0,
+      "value": "View"
+    }
+  ],
+  "Global.Details.Policies.PolicyConfigurationEditDrawer.title": [
+    {
+      "type": 0,
+      "value": "Configure "
+    },
+    {
+      "type": 1,
+      "value": "policy"
+    }
+  ],
+  "Global.Details.Policies.PolicyConfiguringDrawer.title": [
+    {
+      "type": 0,
+      "value": "Configure "
+    },
+    {
+      "type": 1,
+      "value": "policy"
+    }
+  ],
+  "Global.Details.Policies.PolicyList.title": [
+    {
+      "type": 0,
+      "value": "Policy List"
+    }
+  ],
+  "Global.Details.Policies.SaveOperationPolicies.save": [
+    {
+      "type": 0,
+      "value": "Save"
+    }
+  ],
+  "Global.Details.Policies.SaveOperationPolicies.update": [
+    {
+      "type": 0,
+      "value": "Update"
+    }
+  ],
+  "Global.Policies": [
+    {
+      "type": 0,
+      "value": "Global Policies"
+    }
+  ],
+  "Global.Policy.Listing.Table.Header.Name": [
+    {
+      "type": 0,
+      "value": "Global Policy"
+    }
+  ],
+  "GlobalPolicies.Listing.Table.Header.Actions.Edit": [
+    {
+      "type": 0,
+      "value": "Edit"
+    }
+  ],
+  "GlobalPolicies.Listing.Table.Header.Actions.View": [
+    {
+      "type": 0,
+      "value": "View"
+    }
+  ],
+  "GlobalPolicies.Listing.onboarding.create.new": [
+    {
+      "type": 0,
+      "value": "Let’s get started!"
+    }
+  ],
+  "GlobalPolicies.Listing.onboarding.policies.tooltip": [
+    {
+      "type": 0,
+      "value": "Global policies provide you the ability to deploy policy mappings to all the APIs deployed in a specific gateway and not just one single API. Click below to create your first global policy."
+    }
+  ],
+  "GlobalPolicies.Listing.onboarding.policies.tooltip.not.allowed": [
+    {
+      "type": 0,
+      "value": "Global policies provide you the ability to deploy policy mappings to all the APIs deployed in a specific gateway and not just one single API. Please contact a privileged user to create a global policy."
+    }
+  ],
+  "GlobalPolicies.Listing.policies.title.add.new.policy": [
+    {
+      "type": 0,
+      "value": "Add new global policy"
+    }
+  ],
+  "GlobalPolicies.Listing.policies.title.name": [
+    {
+      "type": 0,
+      "value": "Global Policies"
+    }
+  ],
+  "GlobalPolicies.Listing.policies.title.tooltip": [
+    {
+      "type": 0,
+      "value": "This will add policies globally to the gateways. Please navigate to the Policies tab under any desired API if you want to add API / operation level policies"
+    }
+  ],
+  "GlobalPolicies.Listing.table.header.actions.delete": [
+    {
+      "type": 0,
+      "value": "Delete"
     }
   ],
   "LoginDenied.logout": [
@@ -8587,6 +9137,90 @@
     {
       "type": 0,
       "value": "Error 403 : Forbidden"
+    }
+  ],
+  "Polcies.TextField.Description": [
+    {
+      "type": 0,
+      "value": "Description"
+    }
+  ],
+  "Polcies.TextField.Name": [
+    {
+      "type": 0,
+      "value": "Name"
+    }
+  ],
+  "Policy.Delete.Error": [
+    {
+      "type": 0,
+      "value": "Error while deleting the policy"
+    }
+  ],
+  "Policy.Delete.Successful": [
+    {
+      "type": 0,
+      "value": "Policy deleted successfully"
+    }
+  ],
+  "Policy.Deploy.Successful": [
+    {
+      "type": 0,
+      "value": "Policy deployed successfully"
+    }
+  ],
+  "Policy.Description.Cannot.Be.Empty": [
+    {
+      "type": 0,
+      "value": "Policy description cannot be empty"
+    }
+  ],
+  "Policy.Mapping.Added.Successfully": [
+    {
+      "type": 0,
+      "value": "Policy mapping added successfully"
+    }
+  ],
+  "Policy.Mapping.Cannot.Be.Empty": [
+    {
+      "type": 0,
+      "value": "Policy mapping cannot be empty"
+    }
+  ],
+  "Policy.Mapping.Update.Error": [
+    {
+      "type": 0,
+      "value": "Error occurred while updating the policy mapping"
+    }
+  ],
+  "Policy.Mapping.Update.Success": [
+    {
+      "type": 0,
+      "value": "Policy mapping updated successfully"
+    }
+  ],
+  "Policy.Name.Cannot.Be.Empty": [
+    {
+      "type": 0,
+      "value": "Policy name cannot be empty"
+    }
+  ],
+  "Policy.Undeploy.Successful": [
+    {
+      "type": 0,
+      "value": "Policy undeployed successfully"
+    }
+  ],
+  "Request.Details.Policies.PolicyList.Title": [
+    {
+      "type": 0,
+      "value": "Request"
+    }
+  ],
+  "Response.Details.Policies.PolicyList.Title": [
+    {
+      "type": 0,
+      "value": "Response"
     }
   ],
   "Scopes.Create.CreateScope.cancel": [
@@ -8907,6 +9541,18 @@
     {
       "type": 0,
       "value": "List of APIs"
+    }
+  ],
+  "Select.Gateways.Label": [
+    {
+      "type": 0,
+      "value": "Select gateways to deploy"
+    }
+  ],
+  "Select.Gateways.Placeholder": [
+    {
+      "type": 0,
+      "value": "Select gateways to deploy"
     }
   ],
   "ServiceCatalog.CreateApi.api.context.label": [
@@ -9381,6 +10027,12 @@
       "value": "Version"
     }
   ],
+  "Undeploy": [
+    {
+      "type": 0,
+      "value": "Undeploy"
+    }
+  ],
   "UnexpectedError.logout": [
     {
       "type": 0,
@@ -9493,6 +10145,24 @@
     {
       "type": 0,
       "value": "The server encountered an internal error or misconfiguration and was unable to complete your request."
+    }
+  ],
+  "globalPolicies.create.create.heading": [
+    {
+      "type": 0,
+      "value": "Create a new global policy"
+    }
+  ],
+  "globalPolicies.create.edit.heading": [
+    {
+      "type": 0,
+      "value": "Edit global policy"
+    }
+  ],
+  "globalPolicies.heading": [
+    {
+      "type": 0,
+      "value": "Global Policies"
     }
   ],
   "save": [

@@ -18,6 +18,7 @@
         },
         "throttlingPolicyLimit": 80,
         "operationPolicyCount": 500,
+        "documentCount": 1000,
         "propertyDisplaySuffix": "__display",
         "markdown": {
             "skipHtml": true,
@@ -25,6 +26,10 @@
                 "showLineNumbers": false
             },
             "syntaxHighlighterDarkTheme": false
+        },
+        "reactHTMLParser": {
+          "decodeEntries": true,
+          "tagsNotAllowed": []
         },
         "loadDefaultLocales": false,
         "supportedDocTypes": "application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/msword, application/pdf, text/plain, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.oasis.opendocument.text, application/vnd.oasis.opendocument.spreadsheet, application/json, application/x-yaml, .yaml, .md"
@@ -48,6 +53,11 @@
   "apis": {
     "alwaysShowDeploySampleButton": true,
     "showMultiVersionPolicies": false,
+    "tileDisplayInfo": {
+      "showMonetizedState": false,
+      "showBusinessDetails": false,
+      "showTechnicalDetails": false
+    },
     "endpoint": {
       "aws": {
         "regions": {
@@ -74,7 +84,9 @@
           "sa-east-1": "sa-east-1: South America (São Paulo)"
         }
       }
-    }
+    },
+    "maxSubscriptionLimit": 2000,
+    "maxScopeCount": 2000
   }
 }
 

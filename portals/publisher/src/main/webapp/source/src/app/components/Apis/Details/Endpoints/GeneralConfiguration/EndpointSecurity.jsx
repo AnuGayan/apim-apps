@@ -15,6 +15,7 @@
  */
 
 import React, { useState, useEffect, useContext } from 'react';
+import { styled } from '@mui/material/styles';
 import PropTypes from 'prop-types';
 import {
     Grid, TextField, MenuItem, InputAdornment,
@@ -22,17 +23,16 @@ import {
     ListItem,
     ListItemAvatar,
     ListItemText,
-} from '@material-ui/core';
-import { RemoveRedEye } from '@material-ui/icons';
+} from '@mui/material';
+import { RemoveRedEye } from '@mui/icons-material';
 import { FormattedMessage, injectIntl } from 'react-intl';
-import { withStyles } from '@material-ui/core/styles';
-import Table from '@material-ui/core/Table';
-import Button from '@material-ui/core/Button';
-import AddCircle from '@material-ui/icons/AddCircle';
-import TableHead from '@material-ui/core/TableHead';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableRow from '@material-ui/core/TableRow';
+import Table from '@mui/material/Table';
+import Button from '@mui/material/Button';
+import AddCircle from '@mui/icons-material/AddCircle';
+import TableHead from '@mui/material/TableHead';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableRow from '@mui/material/TableRow';
 import isEmpty from 'lodash.isempty';
 import { isRestricted } from 'AppData/AuthManager';
 import APIContext from 'AppComponents/Apis/Details/components/ApiContext';
@@ -42,34 +42,54 @@ import CONSTS from 'AppData/Constants';
 
 import EditableParameterRow from './EditableParameterRow';
 
-const styles = () => ({
-    FormControl: {
+const PREFIX = 'EndpointSecurity';
+
+const classes = {
+    FormControl: `${PREFIX}-FormControl`,
+    radioWrapper: `${PREFIX}-radioWrapper`,
+    addParameter: `${PREFIX}-addParameter`,
+    marginRight: `${PREFIX}-marginRight`,
+    buttonIcon: `${PREFIX}-buttonIcon`,
+    button: `${PREFIX}-button`,
+    listItem: `${PREFIX}-listItem`,
+    eye: `${PREFIX}-eye`
+};
+
+const StyledGrid = styled(Grid)(() => ({
+    [`& .${classes.FormControl}`]: {
         padding: 0,
         width: '100%',
     },
-    radioWrapper: {
+
+    [`& .${classes.radioWrapper}`]: {
         display: 'flex',
         flexDirection: 'row',
     },
-    addParameter: {
+
+    [`& .${classes.addParameter}`]: {
         marginRight: '16px',
     },
-    marginRight: {
+
+    [`& .${classes.marginRight}`]: {
         marginRight: '8px',
     },
-    buttonIcon: {
+
+    [`& .${classes.buttonIcon}`]: {
         marginRight: '16px',
     },
-    button: {
+
+    [`& .${classes.button}`]: {
         marginTop: '5px',
     },
-    listItem: {
+
+    [`& .${classes.listItem}`]: {
         marginTop: '25px',
     },
-    eye: {
+
+    [`& .${classes.eye}`]: {
         cursor: 'pointer',
-    },
-});
+    }
+}));
 
 /**
  * The base component for advanced endpoint configurations.
@@ -79,9 +99,7 @@ const styles = () => ({
 function EndpointSecurity(props) {
     const { api } = useContext(APIContext);
     const {
-        intl, securityInfo, onChangeEndpointAuth, classes, isProduction,
-        saveEndpointSecurityConfig,
-        closeEndpointSecurityConfig,
+        intl, securityInfo, onChangeEndpointAuth, isProduction, saveEndpointSecurityConfig, closeEndpointSecurityConfig,
     } = props;
     const [endpointSecurityInfo, setEndpointSecurityInfo] = useState(CONSTS.DEFAULT_ENDPOINT_SECURITY);
     const [securityValidity, setSecurityValidity] = useState();
@@ -93,36 +111,61 @@ function EndpointSecurity(props) {
     const [parameterValue, setParameterValue] = useState(null);
     const endpointType = isProduction ? 'production' : 'sandbox';
 
-    const authTypes = [
-        {
-            key: 'NONE',
-            value: intl.formatMessage({
-                id: 'Apis.Details.Endpoints.GeneralConfiguration.EndpointSecurity.none',
-                defaultMessage: 'None',
-            }),
-        },
-        {
-            key: 'BASIC',
-            value: intl.formatMessage({
-                id: 'Apis.Details.Endpoints.GeneralConfiguration.EndpointSecurity.basic',
-                defaultMessage: 'Basic Auth',
-            }),
-        },
-        {
-            key: 'DIGEST',
-            value: intl.formatMessage({
-                id: 'Apis.Details.Endpoints.GeneralConfiguration.EndpointSecurity.digest.auth',
-                defaultMessage: 'Digest Auth',
-            }),
-        },
-        {
-            key: 'OAUTH',
-            value: intl.formatMessage({
-                id: 'Apis.Details.Endpoints.GeneralConfiguration.EndpointSecurity.oauth',
-                defaultMessage: 'OAuth 2.0',
-            }),
-        },
-    ];
+    const authTypes = () => {
+        const { gatewayType } = api; // Access gatewayType directly from api
+    
+        if (gatewayType === 'wso2/apk') {
+            return [
+                {
+                    key: 'NONE',
+                    value: intl.formatMessage({
+                        id: 'Apis.Details.Endpoints.GeneralConfiguration.EndpointSecurity.none',
+                        defaultMessage: 'None',
+                    }),
+                },
+                {
+                    key: 'BASIC',
+                    value: intl.formatMessage({
+                        id: 'Apis.Details.Endpoints.GeneralConfiguration.EndpointSecurity.basic',
+                        defaultMessage: 'Basic Auth',
+                    }),
+                },
+            ];
+        }
+    
+        // Default authTypes for other gateway types
+        return [
+            {
+                key: 'NONE',
+                value: intl.formatMessage({
+                    id: 'Apis.Details.Endpoints.GeneralConfiguration.EndpointSecurity.none',
+                    defaultMessage: 'None',
+                }),
+            },
+            {
+                key: 'BASIC',
+                value: intl.formatMessage({
+                    id: 'Apis.Details.Endpoints.GeneralConfiguration.EndpointSecurity.basic',
+                    defaultMessage: 'Basic Auth',
+                }),
+            },
+            {
+                key: 'DIGEST',
+                value: intl.formatMessage({
+                    id: 'Apis.Details.Endpoints.GeneralConfiguration.EndpointSecurity.digest.auth',
+                    defaultMessage: 'Digest Auth',
+                }),
+            },
+            {
+                key: 'OAUTH',
+                value: intl.formatMessage({
+                    id: 'Apis.Details.Endpoints.GeneralConfiguration.EndpointSecurity.oauth',
+                    defaultMessage: 'OAuth 2.0',
+                }),
+            },
+        ];
+    };
+    
     const grantTypes = [
         {
             key: 'CLIENT_CREDENTIALS',
@@ -319,7 +362,7 @@ function EndpointSecurity(props) {
     };
 
     return (
-        <Grid container direction='row' spacing={2}>
+        <StyledGrid container direction='row' spacing={2}>
             <Grid item xs={6}>
                 <TextField
                     disabled={isRestricted(['apim:api_create'], api)}
@@ -339,7 +382,7 @@ function EndpointSecurity(props) {
                     }}
                     onBlur={() => validateAndUpdateSecurityInfo(isProduction)}
                 >
-                    {authTypes.map((type) => (
+                    {authTypes().map((type) => (
                         <MenuItem value={type.key} id={'auth-type-' + type.key}>{type.value}</MenuItem>
                     ))}
                 </TextField>
@@ -772,7 +815,7 @@ function EndpointSecurity(props) {
                     />
                 </Button>
             </Grid>
-        </Grid>
+        </StyledGrid>
     );
 }
 
@@ -782,4 +825,4 @@ EndpointSecurity.propTypes = {
     onChangeEndpointAuth: PropTypes.func.isRequired,
 };
 
-export default withStyles(styles)(injectIntl(EndpointSecurity));
+export default (injectIntl(EndpointSecurity));

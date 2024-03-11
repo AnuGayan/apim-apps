@@ -16,60 +16,63 @@
  * under the License.
  */
 import React from 'react';
+import { styled } from '@mui/material/styles';
 import { FormattedMessage } from 'react-intl';
 import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
-import Input from '@material-ui/core/Input';
-import InputLabel from '@material-ui/core/InputLabel';
-import FormControl from '@material-ui/core/FormControl';
-import Typography from '@material-ui/core/Typography';
-import Chip from '@material-ui/core/Chip';
-import MenuItem from '@material-ui/core/MenuItem';
-import Select from '@material-ui/core/Select';
+import FormControl from '@mui/material/FormControl';
+import Typography from '@mui/material/Typography';
+import Autocomplete from '@mui/material/Autocomplete';
+import Checkbox from '@mui/material/Checkbox';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import TextField from '@mui/material/TextField';
 
-// Styles for Grid and Paper elements
-const styles = theme => ({
-    FormControl: {
+const PREFIX = 'Tokens';
+
+const classes = {
+    FormControl: `${PREFIX}-FormControl`,
+    FormControlOdd: `${PREFIX}-FormControlOdd`,
+    quotaHelp: `${PREFIX}-quotaHelp`,
+    chips: `${PREFIX}-chips`,
+    chip: `${PREFIX}-chip`
+};
+
+// TODO jss-to-styled codemod: The Fragment root was replaced by div. Change the tag if needed.
+const Root = styled('div')((
+    {
+        theme
+    }
+) => ({
+    [`& .${classes.FormControl}`]: {
         padding: theme.spacing(2),
         width: '100%',
     },
-    FormControlOdd: {
+
+    [`& .${classes.FormControlOdd}`]: {
         padding: theme.spacing(2),
         backgroundColor: theme.palette.background.paper,
         width: '100%',
     },
-    quotaHelp: {
+
+    [`& .${classes.quotaHelp}`]: {
         position: 'relative',
     },
-    chips: {
+
+    [`& .${classes.chips}`]: {
         display: 'flex',
         flexWrap: 'wrap',
     },
-    chip: {
-        margin: theme.spacing(0.25),
-    },
-});
 
-const MenuProps = {
-    PaperProps: {
-        style: {
-            maxHeight: 224,
-            width: 250,
-        },
-    },
-    anchorOrigin: {
-        vertical: "bottom",
-        horizontal: "left"
-    },
-    transformOrigin: {
-        vertical: "top",
-        horizontal: "left"
-    },
-    getContentAnchorEl: null,
-};
+    [`& .${classes.chip}`]: {
+        margin: theme.spacing(0.25),
+    }
+}));
+
+const icon = <CheckBoxOutlineBlankIcon fontSize='small' />;
+const checkedIcon = <CheckBoxIcon fontSize='small' />;
 
 /**
- * Used to display generate acctoken UI
+ * Used to display generate access token UI
  */
 const tokens = (props) => {
     /**
@@ -97,47 +100,53 @@ const tokens = (props) => {
         updateAccessTokenRequest(newRequest);
     };
     const {
-        classes, accessTokenRequest, subscriptionScopes,
+        accessTokenRequest, subscriptionScopes,
     } = props;
 
     return (
-        <>
+        <Root>
             <FormControl
+                variant="standard"
                 margin='normal'
                 className={classes.FormControlOdd}
                 disabled={subscriptionScopes.length === 0}
             >
-                <InputLabel htmlFor='quota-helper' className={classes.quotaHelp}>
-                    <FormattedMessage
-                        id='Shared.AppsAndKeys.Tokens.when.you.generate.scopes'
-                        defaultMessage='Scopes'
-                    />
-
-                </InputLabel>
-                <Select
-                    name='scopesSelected'
+                <Autocomplete
                     multiple
+                    limitTags={5}
+                    id='scopesSelected'
+                    name='scopesSelected'
+                    options={subscriptionScopes}
+                    noOptionsText='No scopes available'
+                    disableCloseOnSelect
                     value={accessTokenRequest.scopesSelected}
-                    onChange={e => handleChange('scopesSelected', e)}
-                    input={<Input id='select-multiple-chip' />}
-                    renderValue={selected => (
-                        <div className={classes.chips}>
-                            {selected.map(value => (
-                                <Chip key={value} label={value} className={classes.chip} />
-                            ))}
-                        </div>
+                    onChange={(e, newValue) => handleChange('scopesSelected', { target: { value: newValue } })}
+                    renderOption={(props, option, { selected }) => (
+                        <li {...props}>
+                            <Checkbox
+                                id={'access-token-scope-' + option}
+                                icon={icon}
+                                checkedIcon={checkedIcon}
+                                style={{marginRight: 8}}
+                                checked={selected}
+                            />
+                            {option}
+                        </li>
                     )}
-                    MenuProps={MenuProps}
-                >
-                    {subscriptionScopes.map(scope => (
-                        <MenuItem
-                            key={scope}
-                            value={scope}
-                        >
-                            {scope}
-                        </MenuItem>
-                    ))}
-                </Select>
+                    renderInput={(params) => (
+                        <TextField {...params}
+                            margin='dense'
+                            variant='outlined'
+                                   size='small'
+                            label={<FormattedMessage
+                                htmlFor='quota-helper'
+                                className={classes.quotaHelp}
+                                id='Shared.AppsAndKeys.Tokens.when.you.generate.scopes'
+                                defaultMessage='Scopes'
+                            />}
+                        />
+                    )}
+                />
                 <Typography variant='caption'>
                     <FormattedMessage
                         id='Shared.AppsAndKeys.Tokens.when.you.generate'
@@ -149,10 +158,10 @@ const tokens = (props) => {
                     />
                 </Typography>
             </FormControl>
-        </>
+        </Root>
     );
 };
 tokens.contextTypes = {
     intl: PropTypes.shape({}).isRequired,
 };
-export default withStyles(styles)(tokens);
+export default (tokens);

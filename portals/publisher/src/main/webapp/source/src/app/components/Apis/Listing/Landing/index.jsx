@@ -16,22 +16,29 @@
  * under the License.
  */
 
-import React from 'react';
-import { useTheme } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
-import Typography from '@material-ui/core/Typography';
-import Box from '@material-ui/core/Box';
-import Grid from '@material-ui/core/Grid';
+import React, { useState, useEffect } from 'react';
+import { usePublisherSettings } from 'AppComponents/Shared/AppContext';
+import { styled } from '@mui/material/styles';
+import { useTheme } from '@mui/material';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
 import { FormattedMessage } from 'react-intl';
-import useMediaQuery from '@material-ui/core/useMediaQuery';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 import RestAPIMenu from 'AppComponents/Apis/Listing/Landing/Menus/RestAPIMenu';
 import SoapAPIMenu from 'AppComponents/Apis/Listing/Landing/Menus/SoapAPIMenu';
 import GraphqlAPIMenu from 'AppComponents/Apis/Listing/Landing/Menus/GraphqlAPIMenu';
 import StreamingAPIMenu from 'AppComponents/Apis/Listing/Landing/Menus/StreamingAPIMenu';
 
-const useStyles = makeStyles({
-    root: {
+const PREFIX = 'APILanding';
+
+const classes = {
+    root: `${PREFIX}-root`
+};
+
+const Root = styled('div')({
+    [`& .${classes.root}`]: {
         flexGrow: 1,
     },
 });
@@ -39,7 +46,23 @@ const useStyles = makeStyles({
 const APILanding = () => {
     const theme = useTheme();
     const isXsOrBelow = useMediaQuery(theme.breakpoints.down('xs'));
-    const { root } = useStyles();
+    const { data: settings } = usePublisherSettings();
+    const [gateway, setGatewayType] = useState(true);
+    
+    const getGatewayType = () => {
+        if (settings != null) {
+            if (settings.gatewayTypes && settings.gatewayTypes.includes('Regular')) {
+                setGatewayType(true);
+            } else {
+                setGatewayType(false);
+            }
+        }
+    };
+
+    useEffect(() => {
+        getGatewayType();
+    }, [settings]);
+
     const {
         graphqlIcon,
         restApiIcon,
@@ -48,11 +71,11 @@ const APILanding = () => {
     } = theme.custom.landingPage.icons;
 
     return (
-        <div className={root}>
+        <Root className={classes.root}>
             <Grid
                 container
                 direction='column'
-                justify='center'
+                justifyContent='center'
             >
                 <Grid item xs={12}>
                     <Box pt={isXsOrBelow ? 2 : 7} />
@@ -79,20 +102,23 @@ const APILanding = () => {
                         <Grid
                             container
                             direction='row'
-                            justify='center'
+                            justifyContent='center'
                             alignItems='flex-start'
                             spacing={3}
                         >
                             <RestAPIMenu icon={restApiIcon} />
-                            <SoapAPIMenu icon={soapApiIcon} />
+                            {gateway &&
+                                <SoapAPIMenu icon={soapApiIcon} />
+                            }
                             <GraphqlAPIMenu icon={graphqlIcon} />
-                            <StreamingAPIMenu icon={streamingApiIcon} />
+                            {gateway &&
+                                <StreamingAPIMenu icon={streamingApiIcon} />
+                            }
                         </Grid>
                     </Box>
                 </Grid>
             </Grid>
-        </div>
-
+        </Root>
     );
 };
 

@@ -19,9 +19,13 @@
 import React, { Component, Suspense, lazy } from 'react';
 import PropTypes from 'prop-types';
 import { Redirect, Route, Switch } from 'react-router-dom';
-import { ThemeProvider as CoreThemeProvider, createTheme } from '@material-ui/core/styles';
-import { ThemeProvider as NormalThemeProvider } from '@material-ui/styles';
-// import MaterialDesignCustomTheme from 'AppComponents/Shared/CustomTheme';
+import {
+    ThemeProvider as CoreThemeProvider,
+    StyledEngineProvider,
+    createTheme,
+    adaptV4Theme,
+    ThemeProvider as NormalThemeProvider
+} from '@mui/material/styles';
 import ResourceNotFound from 'AppComponents/Base/Errors/ResourceNotFound';
 import Base from 'AppComponents/Base';
 import AuthManager from 'AppData/AuthManager';
@@ -37,7 +41,10 @@ import Configurations from 'Config';
 import { QueryClientProviderX } from 'AppData/hooks/ReactQueryX';
 import Scopes from 'AppComponents/Scopes/Scopes';
 import CommonPolicies from 'AppComponents/CommonPolicies/CommonPolicies';
+import GlobalPolicies from 'AppComponents/GlobalPolicies/GlobalPolicies';
 import merge from 'lodash/merge';
+import User from './data/User';
+import Utils from './data/Utils';
 
 const ThemeProvider = CoreThemeProvider || NormalThemeProvider;
 const Apis = lazy(() => import('AppComponents/Apis/Apis' /* webpackChunkName: "DeferredAPIs" */));
@@ -66,6 +73,8 @@ export default class Protected extends Component {
         this.state = {
             theme: null,
             settings: null,
+            clientId: Utils.getCookieWithoutEnvironment(User.CONST.PUBLISHER_CLIENT_ID),
+            sessionState: Utils.getCookieWithoutEnvironment(User.CONST.PUBLISHER_SESSION_STATE),
         };
         this.environments = [];
         this.checkSession = this.checkSession.bind(this);
@@ -162,7 +171,7 @@ export default class Protected extends Component {
         if (Configurations.app.singleLogout && Configurations.app.singleLogout.enabled) {
             setInterval(() => {
                 // Check session will only trigger if user is available
-                const { clientId, sessionState } = AuthManager.getUser().getAppInfo();
+                const { clientId, sessionState } = this.state;
                 const msg = clientId + ' ' + sessionState;
                 if (document.getElementById('iframeOP')) {
                     document.getElementById('iframeOP').contentWindow.postMessage(msg, Configurations.idp.origin);
@@ -190,12 +199,14 @@ export default class Protected extends Component {
         if (!theme) {
             return (<Progress />);
         }
+
+        const adaptedTheme = createTheme(adaptV4Theme(defaultTheme));
+        const effectiveTheme = createTheme(
+            merge(adaptedTheme, (typeof theme === 'function' ? theme(adaptedTheme) : theme)));
+
         return (
-            <ThemeProvider theme={createTheme(defaultTheme)}>
-                <ThemeProvider theme={(currentTheme) => createTheme(
-                    merge(currentTheme, (typeof theme === 'function' ? theme(currentTheme) : theme)),
-                )}
-                >
+            <StyledEngineProvider injectFirst>
+                <ThemeProvider theme={effectiveTheme}>
                     <AppErrorBoundary>
                         <QueryClientProviderX>
                             <Base user={user}>
@@ -211,6 +222,7 @@ export default class Protected extends Component {
                                         <Route path='/api-products' component={DeferredAPIs} />
                                         <Route path='/scopes' component={Scopes} />
                                         <Route path='/policies' component={CommonPolicies} />
+                                        <Route path='/global-policies' component={GlobalPolicies} />
                                         <Route path='/service-catalog' component={ServiceCatalogRouting} />
                                         <Route component={ResourceNotFound} />
                                     </Switch>
@@ -219,7 +231,7 @@ export default class Protected extends Component {
                         </QueryClientProviderX>
                     </AppErrorBoundary>
                 </ThemeProvider>
-            </ThemeProvider>
+            </StyledEngineProvider>
         );
     }
 }

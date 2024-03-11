@@ -15,17 +15,17 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { styled } from '@mui/material/styles';
 import {
-    ExpansionPanel,
-    ExpansionPanelDetails,
-    ExpansionPanelSummary,
+    Accordion, 
+    AccordionSummary, 
+    AccordionDetails,
     Grid,
     Typography,
-    withStyles,
     Box,
-} from '@material-ui/core';
+} from '@mui/material';
 import PropTypes from 'prop-types';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { isRestricted } from 'AppData/AuthManager';
 import { FormattedMessage, injectIntl } from 'react-intl';
 import Certificates from './GeneralConfiguration/Certificates';
@@ -33,38 +33,63 @@ import API from '../../../../data/api'; // TODO: Use webpack aliases instead of 
 import Alert from '../../../Shared/Alert';
 import { endpointsToList } from './endpointUtils';
 
-const styles = (theme) => ({
-    configHeaderContainer: {
+const PREFIX = 'GeneralConfiguration';
+
+const classes = {
+    configHeaderContainer: `${PREFIX}-configHeaderContainer`,
+    generalConfigContent: `${PREFIX}-generalConfigContent`,
+    secondaryHeading: `${PREFIX}-secondaryHeading`,
+    heading: `${PREFIX}-heading`,
+    endpointConfigSection: `${PREFIX}-endpointConfigSection`,
+    generalConfigPanel: `${PREFIX}-generalConfigPanel`,
+    securityHeading: `${PREFIX}-securityHeading`,
+    sandboxEndpointSwitch: `${PREFIX}-sandboxEndpointSwitch`
+};
+
+
+const Root = styled('div')((
+    {
+        theme
+    }
+) => ({
+    [`& .${classes.configHeaderContainer}`]: {
         display: 'flex',
         justifyContent: 'space-between',
     },
-    generalConfigContent: {
+
+    [`& .${classes.generalConfigContent}`]: {
         boxShadow: 'inset -1px 2px 3px 0px #c3c3c3',
     },
-    secondaryHeading: {
+
+    [`& .${classes.secondaryHeading}`]: {
         fontSize: theme.typography.pxToRem(15),
         color: theme.palette.text.secondary,
         display: 'flex',
     },
-    heading: {
+
+    [`& .${classes.heading}`]: {
         fontSize: theme.typography.pxToRem(15),
         flexBasis: '33.33%',
         flexShrink: 0,
         fontWeight: '900',
     },
-    endpointConfigSection: {
+
+    [`& .${classes.endpointConfigSection}`]: {
         padding: '10px',
     },
-    generalConfigPanel: {
+
+    [`& .${classes.generalConfigPanel}`]: {
         width: '100%',
     },
-    securityHeading: {
+
+    [`& .${classes.securityHeading}`]: {
         fontWeight: 600,
     },
-    sandboxEndpointSwitch: {
+
+    [`& .${classes.sandboxEndpointSwitch}`]: {
         marginLeft: theme.spacing(2),
-    },
-});
+    }
+}));
 
 /**
  * The component which holds the general configurations of the endpoints.
@@ -77,7 +102,6 @@ function GeneralConfiguration(props) {
         intl,
         epConfig,
         endpointType,
-        classes,
     } = props;
     const [isConfigExpanded, setConfigExpand] = useState(false);
     const [endpointCertificates, setEndpointCertificates] = useState([]);
@@ -109,7 +133,7 @@ function GeneralConfiguration(props) {
                         id: 'Apis.Details.Endpoints.GeneralConfiguration.Certificates.certificate.alias.exist',
                         defaultMessage: 'Adding Certificate Failed. Certificate Alias Exists.',
                     }));
-                } else if (err.response) {
+                } else if (err.response && err.response.body && err.response.body.description) {
                     Alert.error(err.response.body.description);
                 } else {
                     Alert.error(intl.formatMessage({
@@ -117,6 +141,7 @@ function GeneralConfiguration(props) {
                         defaultMessage: 'Something went wrong while adding the certificate.',
                     }));
                 }
+                return Promise.reject(err);
             });
     };
     /**
@@ -143,10 +168,11 @@ function GeneralConfiguration(props) {
             })
             .catch((err) => {
                 console.log(err);
-                Alert.info(intl.formatMessage({
+                Alert.error(intl.formatMessage({
                     id: 'Apis.Details.Endpoints.GeneralConfiguration.Certificates.certificate.delete.error',
                     defaultMessage: 'Error Deleting Certificate',
                 }));
+                return Promise.reject(err);
             });
     };
 
@@ -194,14 +220,14 @@ function GeneralConfiguration(props) {
     }, []);
 
     return (
-        <>
-            <ExpansionPanel
+        (<Root>
+            <Accordion
                 expanded={isConfigExpanded}
                 onChange={() => setConfigExpand(!isConfigExpanded)}
                 className={classes.generalConfigPanel}
                 disabled={isRestricted(['apim:ep_certificates_view', 'apim:api_view'])}
             >
-                <ExpansionPanelSummary
+                <AccordionSummary
                     expandIcon={<ExpandMoreIcon />}
                     id={endpointType.key + '-panel1bh-header'}
                     className={classes.configHeaderContainer}
@@ -233,8 +259,8 @@ function GeneralConfiguration(props) {
                             )}
                         </Typography>
                     )}
-                </ExpansionPanelSummary>
-                <ExpansionPanelDetails className={classes.generalConfigContent}>
+                </AccordionSummary>
+                <AccordionDetails className={classes.generalConfigContent}>
                     <Grid
                         container
                         className={classes.endpointConfigSection}
@@ -248,9 +274,9 @@ function GeneralConfiguration(props) {
                             aliasList={aliasList}
                         />
                     </Grid>
-                </ExpansionPanelDetails>
-            </ExpansionPanel>
-        </>
+                </AccordionDetails>
+            </Accordion>
+        </Root>)
     );
 }
 
@@ -261,4 +287,4 @@ GeneralConfiguration.propTypes = {
     intl: PropTypes.shape({}).isRequired,
 };
 
-export default injectIntl(withStyles(styles)(GeneralConfiguration));
+export default injectIntl((GeneralConfiguration));

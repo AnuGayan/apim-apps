@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    ~ Copyright (c) 2017, WSO2 LLC (http://www.wso2.org) All Rights Reserved.
+    ~ Copyright (c) 2017-2023, WSO2 LLC (https://www.wso2.com).
     ~
     ~ WSO2 LLC licenses this file to you under the Apache License,
     ~ Version 2.0 (the "License"); you may not use this file except
@@ -126,6 +126,7 @@
         <url-pattern>/scopes/*</url-pattern>
         <url-pattern>/settings/*</url-pattern>
         <url-pattern>/policies/*</url-pattern>
+        <url-pattern>/global-policies/*</url-pattern>
         <url-pattern>/api-products/*</url-pattern>
         <url-pattern>/service-catalog/*</url-pattern>
         <url-pattern>/login/*</url-pattern>

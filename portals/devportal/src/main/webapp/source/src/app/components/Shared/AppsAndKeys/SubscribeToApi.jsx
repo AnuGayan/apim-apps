@@ -17,28 +17,49 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import MenuItem from '@material-ui/core/MenuItem';
-import FormControl from '@material-ui/core/FormControl';
-import Grid from '@material-ui/core/Grid';
-import ListItemText from '@material-ui/core/ListItemText';
-import Input from '@material-ui/core/Input';
-import InputLabel from '@material-ui/core/InputLabel';
-import Typography from '@material-ui/core/Typography';
-import Select from '@material-ui/core/Select';
-import { withStyles } from '@material-ui/core/styles';
-import TextField from '@material-ui/core/TextField';
-import Autocomplete from '@material-ui/lab/Autocomplete';
+import { styled } from '@mui/material/styles';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Grid from '@mui/material/Grid';
+import ListItemText from '@mui/material/ListItemText';
+import InputLabel from '@mui/material/InputLabel';
+import Typography from '@mui/material/Typography';
+import TextField from '@mui/material/TextField';
+import Autocomplete from '@mui/material/Autocomplete';
 import PropTypes from 'prop-types';
-import FormHelperText from '@material-ui/core/FormHelperText';
+import FormHelperText from '@mui/material/FormHelperText';
 import { FormattedMessage } from 'react-intl';
 import classNames from 'classnames';
 
-/**
- * @inheritdoc
- * @param {*} theme theme object
- */
-const styles = theme => ({
-    titleBar: {
+const PREFIX = 'SubscribeToApi';
+
+const classes = {
+    titleBar: `${PREFIX}-titleBar`,
+    buttonLeft: `${PREFIX}-buttonLeft`,
+    buttonRight: `${PREFIX}-buttonRight`,
+    title: `${PREFIX}-title`,
+    buttonsWrapper: `${PREFIX}-buttonsWrapper`,
+    legend: `${PREFIX}-legend`,
+    inputText: `${PREFIX}-inputText`,
+    buttonRightLink: `${PREFIX}-buttonRightLink`,
+    FormControl: `${PREFIX}-FormControl`,
+    fullWidth: `${PREFIX}-fullWidth`,
+    FormControlOdd: `${PREFIX}-FormControlOdd`,
+    quotaHelp: `${PREFIX}-quotaHelp`,
+    subscribeRoot: `${PREFIX}-subscribeRoot`,
+    subscribeRootSmall: `${PREFIX}-subscribeRootSmall`,
+    smallDisplay: `${PREFIX}-smallDisplay`,
+    smallDisplayFix: `${PREFIX}-smallDisplayFix`,
+    selectMenuRoot: `${PREFIX}-selectMenuRoot`,
+    appDropDown: `${PREFIX}-appDropDown`
+};
+
+const StyledGrid = styled(Grid)((
+    {
+        theme
+    }
+) => ({
+    [`& .${classes.titleBar}`]: {
         display: 'flex',
         justifyContent: 'space-between',
         borderBottomWidth: '1px',
@@ -46,81 +67,100 @@ const styles = theme => ({
         borderColor: theme.palette.text.secondary,
         marginBottom: 20,
     },
-    buttonLeft: {
+
+    [`& .${classes.buttonLeft}`]: {
         alignSelf: 'flex-start',
         display: 'flex',
     },
-    buttonRight: {
+
+    [`& .${classes.buttonRight}`]: {
         alignSelf: 'flex-end',
         display: 'flex',
         marginLeft: 20,
     },
-    title: {
+
+    [`& .${classes.title}`]: {
         display: 'inline-block',
         marginLeft: 20,
     },
-    buttonsWrapper: {
+
+    [`& .${classes.buttonsWrapper}`]: {
         marginTop: 40,
     },
-    legend: {
+
+    [`& .${classes.legend}`]: {
         marginBottom: 0,
         borderBottomStyle: 'none',
         marginTop: 20,
         fontSize: 12,
     },
-    inputText: {
+
+    [`& .${classes.inputText}`]: {
         marginTop: 20,
     },
-    buttonRightLink: {
+
+    [`& .${classes.buttonRightLink}`]: {
         textDecoration: 'none',
     },
-    FormControl: {
+
+    [`& .${classes.FormControl}`]: {
         padding: theme.spacing(2),
         width: '100%',
     },
-    fullWidth: {
+
+    [`& .${classes.fullWidth}`]: {
         '& .MuiFormControl-root':{
             width: '100%',
         }
     },
-    FormControlOdd: {
+
+    [`& .${classes.FormControlOdd}`]: {
         backgroundColor: theme.palette.background.paper,
     },
-    quotaHelp: {
+
+    [`& .${classes.quotaHelp}`]: {
         position: 'relative',
     },
-    subscribeRoot: {
+
+    [`&.${classes.subscribeRoot}`]: {
         paddingLeft: theme.spacing(2),
     },
-    subscribeRootSmall: {
-        marginLeft: `-${theme.spacing(4)}px`,
+
+    [`&.${classes.subscribeRootSmall}`]: {
+        marginLeft: theme.spacing(-4),
     },
-    smallDisplay: {
+
+    [`& .${classes.smallDisplay}`]: {
         width: 240,
         '& .MuiInput-formControl': {
             marginTop: 0,
         },
     },
-    smallDisplayFix: {
+
+    [`& .${classes.smallDisplayFix}`]: {
         '& .MuiSelect-selectMenu': {
             padding: 0,
         },
     },
-    selectMenuRoot: {
+
+    [`& .${classes.selectMenuRoot}`]: {
         margin: 0,
         padding: 0,
     },
-    appDropDown: {
+
+    [`& .${classes.appDropDown}`]: {
         color: theme.palette.getContrastText(theme.palette.background.paper),
-    },
-});
+        '&:hover': {
+            backgroundColor: 'unset',
+        },
+    }
+}));
 
 const subscribeToApi = (props) => {
     const [appSelected, setAppSelected] = useState('');
-    const [policySelected, setPolicySelected] = useState('');
+    const [policySelected, setPolicySelected] = useState({tierName:''});
     const [applicationsList, setApplicationsList] = useState([]);
     const {
-        classes,
         throttlingPolicyList,
         applicationsAvailable,
         subscriptionRequest,
@@ -128,9 +168,22 @@ const subscribeToApi = (props) => {
         renderSmall,
     } = props;
 
+    let sortedThrottlingPolicyList = throttlingPolicyList;
+
     useEffect(() => {
+        sortedThrottlingPolicyList = throttlingPolicyList.sort((a, b) => {
+            // Sort by 'COMMERCIAL' tier plan first
+            if (a.tierPlan === 'COMMERCIAL' && b.tierPlan !== 'COMMERCIAL') {
+                return -1;
+            } else if (a.tierPlan !== 'COMMERCIAL' && b.tierPlan === 'COMMERCIAL') {
+                return 1;
+            }
+        
+            // For options within the same tier plan, sort alphabetically
+            return a.tierName.localeCompare(b.tierName);
+        });
         if (throttlingPolicyList && throttlingPolicyList[0]) {
-            setPolicySelected(throttlingPolicyList[0].tierName);
+            setPolicySelected(sortedThrottlingPolicyList[0]);
         }
     }, [throttlingPolicyList]);
 
@@ -158,8 +211,8 @@ const subscribeToApi = (props) => {
                 setAppSelected(value);
                 break;
             case 'throttlingPolicy':
-                newRequest.throttlingPolicy = target.value;
-                setPolicySelected(target.value);
+                newRequest.throttlingPolicy = value.tierName;
+                setPolicySelected(value);
                 break;
             default:
                 break;
@@ -168,10 +221,12 @@ const subscribeToApi = (props) => {
     };
 
     return (
-        <Grid container className={classNames(classes.subscribeRoot, { [classes.subscribeRootSmall]: renderSmall })}>
+        <StyledGrid container className={classNames(classes.subscribeRoot, { [classes.subscribeRootSmall]: renderSmall })}>
             <Grid item xs={12} md={renderSmall ? 12 : 6}>
                 {appSelected && (
-                    <FormControl className={classNames(classes.FormControl, { [classes.smallDisplay]: renderSmall })}>
+                    <FormControl
+                        variant="standard"
+                        className={classNames(classes.FormControl, { [classes.smallDisplay]: renderSmall })}>
                         <InputLabel shrink for='application-subscribe' className={classes.quotaHelp}>
                             <FormattedMessage
                                 id='Shared.AppsAndKeys.SubscribeToApi.application'
@@ -182,12 +237,13 @@ const subscribeToApi = (props) => {
                            id="application-subscribe"
                            aria-describedby='application-helper-text'
                            options={applicationsList}
+                           disableClearable
                            value={(applicationsList.length !== 0 && appSelected === '') ?
                                 applicationsList[0] : appSelected}
                            onChange={(e, value) => handleChange('application', e, value)}
                            getOptionLabel={(option) => option.label}
                            classes={{root:classes.fullWidth}}
-                           renderInput={(params) => <TextField {...params} />}
+                           renderInput={(params) => <TextField variant="standard" {...params} />}
                          />
                         <FormHelperText id='application-helper-text'>
                             <FormattedMessage
@@ -197,8 +253,9 @@ const subscribeToApi = (props) => {
                         </FormHelperText>
                     </FormControl>
                 )}
-                {throttlingPolicyList && (
+                {sortedThrottlingPolicyList && (
                     <FormControl
+                        variant="standard"
                         className={classNames(classes.FormControl, classes.smallDisplayFix, {
                             [classes.smallDisplay]: renderSmall,
                             [classes.FormControlOdd]: !renderSmall,
@@ -210,17 +267,20 @@ const subscribeToApi = (props) => {
                                 defaultMessage='Business Plan'
                             />
                         </InputLabel>
-                        <Select
-                            value={policySelected}
+                        <Autocomplete
+                            id='application-policy'
                             aria-describedby='policies-helper-text'
-                            onChange={e => handleChange('throttlingPolicy', e)}
-                            input={<Input name='policySelected' id='policy-label-placeholder' />}
-                            displayEmpty
-                            name='policySelected'
-                            className={classes.selectEmpty}
-                        >
-                            {throttlingPolicyList.map(policy => (
-                                <MenuItem value={policy.tierName} key={policy.tierName}  className={classes.appDropDown}>
+                            options={sortedThrottlingPolicyList}
+                            disableClearable
+                            value={policySelected}
+                            getOptionLabel={(option) => option.tierName}
+                            getOptionSelected={(option, value) => option.tierName === value.tierName}
+                            onChange={(e, value) => handleChange('throttlingPolicy', e, value)}
+                            classes={{ root: classes.fullWidth }}
+                            renderInput={(params) => <TextField variant="standard" {...params} />}
+                            groupBy={(option) => option.tierPlan === 'COMMERCIAL'  ? 'Commercial' : 'Free'}
+                            renderOption={(props, policy) => (
+                                <MenuItem {...props} value={policy.tierName} key={policy.tierName} className={classes.appDropDown}>
                                     {policy.tierPlan === 'COMMERCIAL' ? (
                                         <React.Fragment>
                                             <ListItemText
@@ -248,24 +308,24 @@ const subscribeToApi = (props) => {
                                         <ListItemText primary={policy.tierName} />
                                     )}
                                 </MenuItem>
-                            ))}
-                        </Select>
+                            )}
+                        />
                         <FormHelperText id='policies-helper-text'>
                             <FormattedMessage
                                 id='Shared.AppsAndKeys.SubscribeToApi.available.policies'
                                 defaultMessage='Available Policies -'
                             />{' '}
-                            {throttlingPolicyList.map((policy, index) => (
+                            {sortedThrottlingPolicyList.map((policy, index) => (
                                 <span key={policy.tierName}>
                                     {policy.tierName}
-                                    {index !== throttlingPolicyList.length - 1 && <span>,</span>}
+                                    {index !== sortedThrottlingPolicyList.length - 1 && <span>,</span>}
                                 </span>
                             ))}
                         </FormHelperText>
                     </FormControl>
                 )}
             </Grid>
-        </Grid>
+        </StyledGrid>
     );
 };
 subscribeToApi.propTypes = {
@@ -293,4 +353,4 @@ subscribeToApi.defaultProps = {
     renderSmall: false,
 };
 
-export default withStyles(styles)(subscribeToApi);
+export default (subscribeToApi);

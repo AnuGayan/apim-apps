@@ -18,37 +18,41 @@
  */
 
 import React, { FC, useEffect, useContext, useState } from 'react';
+import { styled } from '@mui/material/styles';
 import { FormattedMessage } from 'react-intl';
-import Box from '@material-ui/core/Box';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemText from '@material-ui/core/ListItemText';
-import {
-    Drawer,
-    makeStyles,
-    ListItemIcon,
-    Theme,
-    Typography,
-} from '@material-ui/core';
-import IconButton from '@material-ui/core/IconButton';
-import { Settings, Close } from '@material-ui/icons';
-import Divider from '@material-ui/core/Divider';
+import Box from '@mui/material/Box';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import { Drawer, ListItemIcon, Typography } from '@mui/material';
+import { Theme } from '@mui/material';
+import IconButton from '@mui/material/IconButton';
+import { Settings, Close } from '@mui/icons-material';
+import Divider from '@mui/material/Divider';
 import General from './AttachedPolicyForm/General';
 import type { PolicySpec, ApiPolicy, AttachedPolicy } from './Types';
 import ApiContext from '../components/ApiContext';
 import ApiOperationContext from './ApiOperationContext';
 import API from 'AppData/api';
 
-const useStyles = makeStyles((theme: Theme) => ({
-    drawerPaper: {
+const PREFIX = 'PolicyConfigurationEditDrawer';
+
+const classes = {
+    drawerPaper: `${PREFIX}-drawerPaper`,
+    iconSize: `${PREFIX}-iconSize`
+};
+
+const StyledDrawer = styled(Drawer)(({ theme }: { theme: Theme }) => ({
+    [`& .${classes.drawerPaper}`]: {
         backgroundColor: 'white',
         width: '30%',
     },
-    iconSize: {
+
+    [`& .${classes.iconSize}`]: {
         height: '1.2em',
         width: '1.2em',
         color: theme.palette.grey[700],
-    },
+    }
 }));
 
 interface PolicyConfigurationEditDrawerProps {
@@ -59,6 +63,7 @@ interface PolicyConfigurationEditDrawerProps {
     drawerOpen: boolean;
     setDrawerOpen: React.Dispatch<React.SetStateAction<boolean>>;
     allPolicies: PolicySpec[] | null;
+    isAPILevelPolicy: boolean;
 }
 
 /**
@@ -74,10 +79,12 @@ const PolicyConfigurationEditDrawer: FC<PolicyConfigurationEditDrawerProps> = ({
     allPolicies,
     drawerOpen,
     setDrawerOpen,
+    isAPILevelPolicy,
 }) => {
-    const classes = useStyles();
+
     const { api } = useContext<any>(ApiContext);
     const { apiOperations } = useContext<any>(ApiOperationContext);
+    const { apiLevelPolicies } = useContext<any>(ApiOperationContext);
     const [policySpec, setPolicySpec] = useState<PolicySpec>();
 
     useEffect(() => {
@@ -102,12 +109,12 @@ const PolicyConfigurationEditDrawer: FC<PolicyConfigurationEditDrawerProps> = ({
         })();
     }, [policyObj]);
 
-    const operationInAction = apiOperations.find(
+    const operationInAction = (!isAPILevelPolicy) ? apiOperations.find(
         (op: any) =>
             op.target === target &&
             op.verb.toLowerCase() === verb.toLowerCase(),
-    );
-    const operationFlowPolicy = operationInAction.operationPolicies[
+    ) : null;
+    const operationFlowPolicy = ((isAPILevelPolicy) ? apiLevelPolicies : operationInAction.operationPolicies)[
         currentFlow
     ].find((policy: any) => policy.uuid === policyObj?.uniqueKey);
 
@@ -123,7 +130,7 @@ const PolicyConfigurationEditDrawer: FC<PolicyConfigurationEditDrawerProps> = ({
     };
 
     return (
-        <Drawer
+        <StyledDrawer
             anchor='right'
             open={drawerOpen}
             onClose={handleDrawerClose}
@@ -149,7 +156,7 @@ const PolicyConfigurationEditDrawer: FC<PolicyConfigurationEditDrawerProps> = ({
                             }
                         />
                         <ListItemIcon>
-                            <IconButton onClick={handleDrawerClose}>
+                            <IconButton onClick={handleDrawerClose} size='large'>
                                 <Close className={classes.iconSize} />
                             </IconButton>
                         </ListItemIcon>
@@ -166,10 +173,11 @@ const PolicyConfigurationEditDrawer: FC<PolicyConfigurationEditDrawerProps> = ({
                         apiPolicy={apiPolicy}
                         handleDrawerClose={handleDrawerClose}
                         isEditMode
+                        isAPILevelPolicy={isAPILevelPolicy}
                     />
                 )}
             </Box>
-        </Drawer>
+        </StyledDrawer>
     );
 };
 

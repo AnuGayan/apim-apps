@@ -18,14 +18,14 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import ContentBase from 'AppComponents/AdminPages/Addons/ContentBase';
 import PermissionAPI from 'AppData/PermissionScopes';
-import Grid from '@material-ui/core/Grid';
+import Grid from '@mui/material/Grid';
 import Progress from 'AppComponents/Shared/Progress';
-import Button from '@material-ui/core/Button';
-import Box from '@material-ui/core/Box';
+import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
 import cloneDeep from 'lodash.clonedeep';
 import { FormattedMessage, useIntl } from 'react-intl';
 import WarningBase from 'AppComponents/AdminPages/Addons/WarningBase';
-import { Alert as MUIAlert } from '@material-ui/lab';
+import { Alert as MUIAlert } from '@mui/material';
 import PermissionsSelector from './TreeView/PermissionsSelector';
 import AdminTable from './AdminTable/AdminTable';
 import AdminTableHead from './AdminTable/AdminTableHead';
@@ -287,6 +287,7 @@ export default function ListRoles() {
                         variant='contained'
                         color='primary'
                         onClick={() => setIsOpen(true)}
+                        data-testid='add-scope-mapping'
                     >
                         <FormattedMessage
                             id='RolePermissions.ListRoles.scope.assignment.button'
@@ -311,22 +312,30 @@ export default function ListRoles() {
                 <AdminTableHead headCells={headCells} />
                 <TableBody rows={Object.entries(searchPermissionMappings).map(([role, mapping]) => {
                     return [mapping.aliases ? (
-                        <Box display='inline'>
+                        <Box display='grid'>
                             {role}
                             <Box
-                                borderRadius={16}
-                                borderColor='info.main'
-                                ml={2}
                                 mr={2}
-                                pl={1}
                                 pr={1}
-                                border={1}
                                 display='inline'
                                 fontSize={10}
                                 fontWeight='fontWeightLight'
+                                data-testid={mapping.aliases}
                             >
-                                {/* TODO: Do support multiple aliases from UI ~tmkb  */}
-                                {mapping.aliases[0]}
+                                {mapping.aliases.map((alias) => (
+                                    <Box
+                                        borderRadius='16px'
+                                        borderColor='info.main'
+                                        display='inline-block'
+                                        border={1}
+                                        pr={1}
+                                        mr={1}
+                                        pl={1}
+                                        mt={1}
+                                    >
+                                        {alias}
+                                    </Box>
+                                ))}
                             </Box>
                         </Box>
                     ) : role,

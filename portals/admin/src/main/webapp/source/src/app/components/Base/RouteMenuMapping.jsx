@@ -17,13 +17,13 @@
  */
 
 import React from 'react';
-import PeopleIcon from '@material-ui/icons/People';
-import DnsRoundedIcon from '@material-ui/icons/DnsRounded';
-import SettingsEthernetIcon from '@material-ui/icons/SettingsEthernet';
-import SettingsIcon from '@material-ui/icons/Settings';
-import SettingsApplicationsIcon from '@material-ui/icons/SettingsApplications';
-import PhonelinkSetupIcon from '@material-ui/icons/PhonelinkSetup';
-import HomeIcon from '@material-ui/icons/Home';
+import PeopleIcon from '@mui/icons-material/People';
+import DnsRoundedIcon from '@mui/icons-material/DnsRounded';
+import SettingsEthernetIcon from '@mui/icons-material/SettingsEthernet';
+import SettingsIcon from '@mui/icons-material/Settings';
+import SettingsApplicationsIcon from '@mui/icons-material/SettingsApplications';
+import PhonelinkSetupIcon from '@mui/icons-material/PhonelinkSetup';
+import HomeIcon from '@mui/icons-material/Home';
 import Dashboard from 'AppComponents/AdminPages/Dashboard/Dashboard';
 import ApplicationThrottlingPolicies from 'AppComponents/Throttling/Application/List';
 import SubscriptionThrottlingPolicies from 'AppComponents/Throttling/Subscription/index';
@@ -38,11 +38,11 @@ import KeyManagers from 'AppComponents/KeyManagers';
 import ListRoles from 'AppComponents//RolePermissions/ListRoles.jsx';
 import TenantConfSave from 'AppComponents/AdvancedSettings/TenantConfSave';
 
-import GamesIcon from '@material-ui/icons/Games';
-import CategoryIcon from '@material-ui/icons/Category';
-import PolicyIcon from '@material-ui/icons/Policy';
-import BlockIcon from '@material-ui/icons/Block';
-import AssignmentIcon from '@material-ui/icons/Assignment';
+import GamesIcon from '@mui/icons-material/Games';
+import CategoryIcon from '@mui/icons-material/Category';
+import PolicyIcon from '@mui/icons-material/Policy';
+import BlockIcon from '@mui/icons-material/Block';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 import ApplicationCreation from 'AppComponents/Workflow/ApplicationCreation';
 import ApplicationDeletion from 'AppComponents/Workflow/ApplicationDeletion';
 import SubscriptionCreation from 'AppComponents/Workflow/SubscriptionCreation';
@@ -50,12 +50,14 @@ import SubscriptionDeletion from 'AppComponents/Workflow/SubscriptionDeletion';
 import SubscriptionUpdate from 'AppComponents/Workflow/SubscriptionUpdate';
 import RegistrationCreation from 'AppComponents/Workflow/RegistrationCreation';
 import APIStateChange from 'AppComponents/Workflow/APIStateChange';
+import APIRevisionDeployment from 'AppComponents/Workflow/APIRevisionDeployment';
 import UserCreation from 'AppComponents/Workflow/UserCreation';
-import AssignmentTurnedInIcon from '@material-ui/icons/AssignmentTurnedIn';
-import SecurityIcon from '@material-ui/icons/Security';
-import TouchAppIcon from '@material-ui/icons/TouchApp';
-import VpnKeyIcon from '@material-ui/icons/VpnKey';
-import AccountTreeIcon from '@material-ui/icons/AccountTree';
+import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+import SecurityIcon from '@mui/icons-material/Security';
+import TouchAppIcon from '@mui/icons-material/TouchApp';
+import VpnKeyIcon from '@mui/icons-material/VpnKey';
+import AccountTreeIcon from '@mui/icons-material/AccountTree';
+import ListApis from '../APISettings/ListApis';
 
 const RouteMenuMapping = (intl) => [
     {
@@ -290,6 +292,12 @@ const RouteMenuMapping = (intl) => [
                 component: () => <APIStateChange isAPIProduct />,
                 icon: <SettingsEthernetIcon />,
             },
+            {
+                id: 'API Revision Deployment',
+                path: '/tasks/api-revision-deploy',
+                component: APIRevisionDeployment,
+                icon: <SettingsEthernetIcon />,
+            },
         ],
     },
     {
@@ -301,10 +309,19 @@ const RouteMenuMapping = (intl) => [
             {
                 id: intl.formatMessage({
                     id: 'Base.RouteMenuMapping.applications',
-                    defaultMessage: 'Applications',
+                    defaultMessage: 'Change Application Owner',
                 }),
                 path: '/settings/applications',
                 component: ListApplications,
+                icon: <SettingsIcon />,
+            },
+            {
+                id: intl.formatMessage({
+                    id: 'Base.RouteMenuMapping.apis',
+                    defaultMessage: 'Change API Provider',
+                }),
+                path: '/settings/apis',
+                component: ListApis,
                 icon: <SettingsIcon />,
             },
             {

@@ -20,109 +20,74 @@ import {
     FormControlLabel,
     MenuItem,
     Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import { FormattedMessage, useIntl } from 'react-intl';
 import React, { useEffect, useReducer, useState } from 'react';
-
+import { styled } from '@mui/material/styles';
 import API from 'AppData/api';
 import Alert from 'AppComponents/Shared/Alert';
 import BlockingProgress from 'AppComponents/Shared/BlockingProgress';
-import Box from '@material-ui/core/Box';
-import Button from '@material-ui/core/Button';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Certificates from 'AppComponents/KeyManagers/Certificates';
-import Checkbox from '@material-ui/core/Checkbox';
-import ChipInput from 'material-ui-chip-input'; // DEPRECATED: Do not COPY and use this component.
-import CircularProgress from '@material-ui/core/CircularProgress';
+import Checkbox from '@mui/material/Checkbox';
+import { MuiChipsInput } from 'mui-chips-input';
+import CircularProgress from '@mui/material/CircularProgress';
 import ClaimMappings from 'AppComponents/KeyManagers/ClaimMapping';
-import Collapse from '@material-ui/core/Collapse';
+import Collapse from '@mui/material/Collapse';
 import ContentBase from 'AppComponents/AdminPages/Addons/ContentBase';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import FormControl from '@material-ui/core/FormControl';
-import FormHelperText from '@material-ui/core/FormHelperText';
-import Grid from '@material-ui/core/Grid';
-import IconButton from '@material-ui/core/IconButton';
-import InputLabel from '@material-ui/core/InputLabel';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import FormControl from '@mui/material/FormControl';
+import FormHelperText from '@mui/material/FormHelperText';
+import Grid from '@mui/material/Grid';
+import IconButton from '@mui/material/IconButton';
+import InputLabel from '@mui/material/InputLabel';
 import KeyManagerConfiguration from 'AppComponents/KeyManagers/KeyManagerConfiguration';
 import KeyValidations from 'AppComponents/KeyManagers/KeyValidations';
 import PropTypes from 'prop-types';
-import Radio from '@material-ui/core/Radio';
-import RadioGroup from '@material-ui/core/RadioGroup';
-import { Link as RouterLink } from 'react-router-dom';
-import Select from '@material-ui/core/Select';
-import TextField from '@material-ui/core/TextField';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
+import Select from '@mui/material/Select';
+import TextField from '@mui/material/TextField';
 import cloneDeep from 'lodash.clonedeep';
-import clsx from 'clsx';
 import isEmpty from 'lodash.isempty';
-import { makeStyles } from '@material-ui/core/styles';
 import { useAppContext } from 'AppComponents/Shared/AppContext';
+import base64url from 'base64url';
+import Error from '@mui/icons-material/Error';
+import InputAdornment from '@mui/material/InputAdornment';
+import { red } from '@mui/material/colors/';
 
-const useStyles = makeStyles((theme) => ({
-    root: {
-        marginBottom: theme.spacing(10),
-    },
-    error: {
-        color: theme.palette.error.dark,
-    },
-    hr: {
-        border: 'solid 1px #efefef',
-    },
-    labelRoot: {
-        position: 'relative',
-    },
-    FormControlRoot: {
-        width: '100%',
-    },
-    select: {
-        padding: '10.5px 14px',
-    },
-    chipInputRoot: {
-        border: 'solid 1px #ccc',
-        borderRadius: 10,
-        padding: 10,
-        width: '100%',
-        '& :before': {
-            borderBottom: 'none',
-        },
-    },
-    '@global': {
-        '.MuiFormControl-root': {
-            marginTop: '20px',
-        },
-        '.MuiFormControl-root:first-child': {
-            marginTop: '0',
-        },
-    },
-    chipHelper: {
-        position: 'absolute',
-        marginTop: '-5px',
-    },
-    chipContainer: {
-        marginBottom: 8,
-    },
-    importButton: {
-        position: 'absolute',
-        top: 0,
-        right: 0,
-        display: 'flex',
-        flexDirection: 'row',
-        textAlign: 'right',
-        alignItems: 'center',
-        paddingTop: 10,
-        '& p': {
-            marginRight: 10,
-        },
-    },
-    expand: {
+const StyledSpan = styled('span')(({ theme }) => ({ color: theme.palette.error.dark }));
+
+const StyledHr = styled('hr')({ border: 'solid 1px #efefef' });
+
+const StyledExpandMoreIcon = styled(ExpandMoreIcon)(({ theme }) => ({
+    '&.expand': {
         transform: 'rotate(0deg)',
         marginLeft: 'auto',
         transition: theme.transitions.create('transform', {
             duration: theme.transitions.duration.shortest,
         }),
     },
-    expandOpen: {
+    '&.expandOpen': {
         transform: 'rotate(180deg)',
+        transition: theme.transitions.create('transform', {
+            duration: theme.transitions.duration.shortest,
+        }),
     },
 }));
+
+const StyledContentBase = styled(ContentBase)({
+    '@global': {
+        '.MuiFormControl-root': {
+            marginTop: '20px',
+        },
+        '.MuiFormControl-root:first-of-type': {
+            marginTop: '0',
+        },
+    },
+});
 
 const residentKeyManagerName = 'Resident Key Manager';
 
@@ -153,6 +118,7 @@ function reducer(state, newValue) {
         case 'enableMapOAuthConsumerApps':
         case 'enableOAuthAppCreation':
         case 'enableSelfValidationJWT':
+        case 'roles':
         case 'claimMapping':
         case 'additionalProperties':
         case 'availableGrantTypes':
@@ -166,6 +132,11 @@ function reducer(state, newValue) {
             return { ...state, [field]: value };
         case 'all':
             return value;
+        case 'permissionStatus':
+            return {
+                ...state,
+                permissions: { ...state.permissions, [field]: value },
+            };
         default:
             return newValue;
     }
@@ -176,14 +147,19 @@ function reducer(state, newValue) {
  * @returns {JSX} Header AppBar components.
  */
 function AddEditKeyManager(props) {
-    const classes = useStyles();
     const intl = useIntl();
     const [saving, setSaving] = useState(false);
     const [importingConfig, setImportingConfig] = useState(false);
     const [isResidentKeyManager, setIsResidentKeyManager] = useState(false);
     const [isTokenTypeSelected, setIsTokenTypeSelected] = useState(true);
     const { match: { params: { id } }, history } = props;
-    const { settings } = useAppContext();
+    const [validRoles, setValidRoles] = useState([]);
+    const [invalidRoles, setInvalidRoles] = useState([]);
+    const [roleValidity, setRoleValidity] = useState(true);
+    const { settings, isSuperTenant, user: { _scopes } } = useAppContext();
+    const location = useLocation();
+    const { isGlobal } = (location && location.state) || false;
+    const isSuperAdmin = isSuperTenant && _scopes.includes('apim:admin_settings');
 
     const defaultKMType = (settings.keyManagerConfiguration
         && settings.keyManagerConfiguration.length > 0)
@@ -210,6 +186,10 @@ function AddEditKeyManager(props) {
         enableMapOAuthConsumerApps: true,
         enableOAuthAppCreation: true,
         enableSelfValidationJWT: true,
+        permissions: {
+            roles: [],
+            permissionStatus: 'PUBLIC',
+        },
         claimMapping: [],
         tokenValidation: [
             {
@@ -235,13 +215,50 @@ function AddEditKeyManager(props) {
         issuer, scopeManagementEndpoint, availableGrantTypes, consumerKeyClaim, scopesClaim,
         enableTokenGeneration, enableMapOAuthConsumerApps, certificates,
         enableOAuthAppCreation, enableSelfValidationJWT, claimMapping, tokenValidation, additionalProperties, alias,
+        permissions,
     } = state;
+    let permissionStatus = '';
+    if (permissions) {
+        permissionStatus = state.permissions.permissionStatus;
+    }
+    const handleRoleDeletion = (role) => {
+        if (invalidRoles.includes(role)) {
+            const invalidRolesArray = invalidRoles.filter((existingRole) => existingRole !== role);
+            setInvalidRoles(invalidRolesArray);
+            if (invalidRolesArray.length === 0) {
+                setRoleValidity(true);
+            }
+        } else {
+            setValidRoles(validRoles.filter((existingRole) => existingRole !== role));
+        }
+    };
     const [validating, setValidating] = useState(false);
     const [keymanagerConnectorConfigurations, setKeyManagerConfiguration] = useState([]);
     const [enableExchangeToken, setEnableExchangeToken] = useState(false);
     const [enableDirectToken, setEnableDirectToken] = useState(true);
 
     const restApi = new API();
+    const handleRoleAddition = (role) => {
+        const promise = restApi.validateSystemRole(base64url.encode(role));
+        promise
+            .then(() => {
+                setValidRoles(validRoles.concat(role));
+                if (invalidRoles.length === 0) {
+                    setRoleValidity(true);
+                } else {
+                    setRoleValidity(false);
+                }
+            })
+            .catch((error) => {
+                if (error.status === 404) {
+                    setInvalidRoles(invalidRoles.concat(role));
+                    setRoleValidity(false);
+                } else {
+                    Alert.error('Error when validating role: ' + role);
+                    console.error('Error when validating role ' + error);
+                }
+            });
+    };
     const updateKeyManagerConnectorConfiguration = (keyManagerType) => {
         if (settings.keyManagerConfiguration) {
             settings.keyManagerConfiguration.map(({
@@ -266,7 +283,8 @@ function AddEditKeyManager(props) {
     };
     useEffect(() => {
         if (id) {
-            restApi.keyManagerGet(id).then((result) => {
+            const api = isGlobal ? restApi.globalKeyManagerGet(id) : restApi.keyManagerGet(id);
+            api.then((result) => {
                 let editState;
                 if (result.body.name !== null) {
                     const newTokenValidation = (result.body.tokenValidation.length === 0)
@@ -275,10 +293,18 @@ function AddEditKeyManager(props) {
                                 id: 1, type: '', value: '', enable: true,
                             },
                         ] : result.body.tokenValidation;
-
                     editState = {
-                        ...result.body, tokenValidation: newTokenValidation,
+                        ...result.body,
+                        tokenValidation: newTokenValidation,
+                        permissions: (result.body.permissions === null || result.body.permissions === 'PUBLIC')
+                            ? {
+                                permissionStatus: 'PUBLIC',
+                            } : {
+                                permissionStatus: result.body.permissions.permissionType,
+                                roles: validRoles,
+                            },
                     };
+
                     if (result.body.tokenType === 'EXCHANGED') {
                         setEnableDirectToken(false);
                         setEnableExchangeToken(true);
@@ -289,6 +315,10 @@ function AddEditKeyManager(props) {
                         setIsResidentKeyManager(true);
                     }
                 }
+                setValidRoles(result.body.permissions
+                    && result.body.permissions.roles
+                    ? result.body.permissions.roles
+                    : []);
                 dispatch({ field: 'all', value: editState });
                 updateKeyManagerConnectorConfiguration(editState.type);
             });
@@ -343,7 +373,10 @@ function AddEditKeyManager(props) {
     };
 
     const onChange = (e) => {
-        if (e.target.type === 'checkbox') {
+        if (e.target.name === 'KeyManagerPermissionRestrict') {
+            permissionStatus = e.target.value;
+            dispatch({ field: 'permissionStatus', value: permissionStatus });
+        } else if (e.target.type === 'checkbox') {
             if (e.target.name === 'enableDirectToken' || e.target.name === 'enableExchangeToken') {
                 if ((enableDirectToken || enableExchangeToken) && !e.target.checked) {
                     setIsTokenTypeSelected((enableDirectToken && enableExchangeToken) || false);
@@ -430,13 +463,23 @@ function AddEditKeyManager(props) {
         }
 
         const keymanager = {
-            ...state, tokenValidation: newTokenValidation, tokenType,
+            ...state,
+            tokenValidation: newTokenValidation,
+            tokenType,
+            permissions: (state.permissions === null || state.permissions.permissionStatus === null
+                || state.permissions.permissionStatus === 'PUBLIC') ? null : {
+                    permissionType: state.permissions.permissionStatus,
+                    roles: validRoles,
+                },
+            global: isGlobal,
         };
 
         if (id) {
-            promisedAddKeyManager = restApi.updateKeyManager(id, keymanager);
+            promisedAddKeyManager = isGlobal
+                ? restApi.updateGlobalKeyManager(id, keymanager) : restApi.updateKeyManager(id, keymanager);
         } else {
-            promisedAddKeyManager = restApi.addKeyManager(keymanager);
+            promisedAddKeyManager = isGlobal
+                ? restApi.addGlobalKeyManager(keymanager) : restApi.addKeyManager(keymanager);
             promisedAddKeyManager
                 .then(() => {
                     return (intl.formatMessage({
@@ -532,18 +575,29 @@ function AddEditKeyManager(props) {
         setExpanded(!expanded);
     };
 
+    let pageTitle;
+    if (isGlobal) {
+        pageTitle = id ? `${intl.formatMessage({
+            id: 'KeyManagers.AddEditKeyManager.title.editGlobal',
+            defaultMessage: 'Global Key Manager - Edit ',
+        })} ${name}` : intl.formatMessage({
+            id: 'KeyManagers.AddEditKeyManager.title.newGlobal',
+            defaultMessage: 'Global Key Manager - Create new',
+        });
+    } else {
+        pageTitle = id ? `${intl.formatMessage({
+            id: 'KeyManagers.AddEditKeyManager.title.edit',
+            defaultMessage: 'Key Manager - Edit ',
+        })} ${name}` : intl.formatMessage({
+            id: 'KeyManagers.AddEditKeyManager.title.new',
+            defaultMessage: 'Key Manager - Create new',
+        });
+    }
+
     return (
-        <ContentBase
+        <StyledContentBase
             pageStyle='half'
-            title={
-                id ? `${intl.formatMessage({
-                    id: 'KeyManagers.AddEditKeyManager.title.edit',
-                    defaultMessage: 'Key Manager - Edit ',
-                })} ${name}` : intl.formatMessage({
-                    id: 'KeyManagers.AddEditKeyManager.title.new',
-                    defaultMessage: 'Key Manager - Create new',
-                })
-            }
+            title={pageTitle}
             help={<div />}
         >
             {importingConfig && (
@@ -553,7 +607,7 @@ function AddEditKeyManager(props) {
                 })}
                 />
             )}
-            <Box component='div' m={2} className={classes.root}>
+            <Box component='div' m={2} sx={(theme) => ({ mb: theme.spacing(10) })}>
                 <Grid container spacing={2}>
                     <Grid item xs={12} md={12} lg={3}>
                         <Typography
@@ -596,7 +650,7 @@ function AddEditKeyManager(props) {
                                                         defaultMessage='Name'
                                                     />
 
-                                                    <span className={classes.error}>*</span>
+                                                    <StyledSpan>*</StyledSpan>
                                                 </span>
                                             )}
                                             fullWidth
@@ -628,7 +682,7 @@ function AddEditKeyManager(props) {
                                                             id='Admin.KeyManager.label.DisplayName'
                                                             defaultMessage='Display Name'
                                                         />
-                                                        <span className={classes.error}>*</span>
+                                                        <StyledSpan>*</StyledSpan>
                                                     </span>
                                                 )}
                                                 error={hasErrors('displayName', displayName, validating)}
@@ -646,8 +700,8 @@ function AddEditKeyManager(props) {
                             <TextField
                                 id='description'
                                 multiline
-                                rows={4}
-                                rowsMax={10}
+                                minRows={4}
+                                maxRows={10}
                                 margin='dense'
                                 name='description'
                                 label={(
@@ -671,7 +725,7 @@ function AddEditKeyManager(props) {
                         <>
                             <Grid item xs={12}>
                                 <Box marginTop={2} marginBottom={2}>
-                                    <hr className={classes.hr} />
+                                    <StyledHr />
                                 </Box>
                             </Grid>
 
@@ -704,22 +758,22 @@ function AddEditKeyManager(props) {
                                 <Box component='div' m={1}>
                                     <FormControl
                                         variant='outlined'
-                                        className={classes.FormControlRoot}
+                                        fullWidth
                                         error={hasErrors('type', type, validating)}
                                     >
-                                        <InputLabel classes={{ root: classes.labelRoot }}>
+                                        <InputLabel sx={{ position: 'relative' }}>
                                             <FormattedMessage
                                                 defaultMessage='Key Manager Type'
                                                 id='Admin.KeyManager.form.type'
                                             />
-                                            <span className={classes.error}>*</span>
+                                            <StyledSpan>*</StyledSpan>
                                         </InputLabel>
                                         <Select
+                                            variant='outlined'
                                             id='Admin.KeyManager.form.type.select'
                                             name='type'
                                             value={type}
                                             onChange={onChange}
-                                            classes={{ select: classes.select }}
                                             data-testid='key-manager-type-select'
                                         >
                                             {settings.keyManagerConfiguration.map((keymanager) => (
@@ -744,7 +798,7 @@ function AddEditKeyManager(props) {
                                         required
                                         error={!isTokenTypeSelected}
                                         variant='outlined'
-                                        className={classes.FormControlRoot}
+                                        fullWidth
                                     >
                                         <Box display='flex' marginTop={3} marginBottom={2}>
                                             <Typography
@@ -816,7 +870,7 @@ function AddEditKeyManager(props) {
                                 <>
                                     <Grid item xs={12}>
                                         <Box marginTop={2} marginBottom={2}>
-                                            <hr className={classes.hr} />
+                                            <StyledHr />
                                         </Box>
                                     </Grid>
 
@@ -861,7 +915,7 @@ function AddEditKeyManager(props) {
                                                                 id='Admin.KeyManager.label.token.audience'
                                                                 defaultMessage='Allowed Token Audience '
                                                             />
-                                                            <span className={classes.error}>*</span>
+                                                            <StyledSpan>*</StyledSpan>
                                                         </span>
                                                     )}
                                                     onChange={onChange}
@@ -907,6 +961,7 @@ function AddEditKeyManager(props) {
                                                         disabled={!wellKnownEndpoint}
                                                         onClick={importKMConfig}
                                                         id='import-button'
+                                                        sx={{ mt: 1 }}
                                                     >
                                                         <FormattedMessage
                                                             id='KeyManagers.AddEditKeyManager.import.button.message'
@@ -930,7 +985,7 @@ function AddEditKeyManager(props) {
                                                             id='KeyManagers.AddEditKeyManager.form.Issuer'
                                                             defaultMessage='Issuer'
                                                         />
-                                                        <span className={classes.error}>*</span>
+                                                        <StyledSpan>*</StyledSpan>
                                                     </span>
                                                 )}
                                                 error={hasErrors('issuer', issuer, validating)}
@@ -960,7 +1015,7 @@ function AddEditKeyManager(props) {
                                                             clientRegistrationEndpoint'
                                                             defaultMessage='Client Registration Endpoint'
                                                         />
-                                                        <span className={classes.error}>*</span>
+                                                        <StyledSpan>*</StyledSpan>
                                                     </span>
                                                 )}
                                                 error={hasErrors('clientRegistrationEndpoint',
@@ -989,7 +1044,7 @@ function AddEditKeyManager(props) {
                                                             introspectionEndpoint'
                                                             defaultMessage='Introspection Endpoint'
                                                         />
-                                                        <span className={classes.error}>*</span>
+                                                        <StyledSpan>*</StyledSpan>
                                                     </span>
                                                 )}
                                                 error={hasErrors('introspectionEndpoint',
@@ -1016,7 +1071,7 @@ function AddEditKeyManager(props) {
                                                             id='KeyManagers.AddEditKeyManager.form.tokenEndpoint'
                                                             defaultMessage='Token Endpoint'
                                                         />
-                                                        <span className={classes.error}>*</span>
+                                                        <StyledSpan>*</StyledSpan>
                                                     </span>
                                                 )}
                                                 error={hasErrors('tokenEndpoint', tokenEndpoint, validating)}
@@ -1061,7 +1116,7 @@ function AddEditKeyManager(props) {
                                                             id='KeyManagers.AddEditKeyManager.form.revokeEndpoint'
                                                             defaultMessage='Revoke Endpoint'
                                                         />
-                                                        <span className={classes.error}>*</span>
+                                                        <StyledSpan>*</StyledSpan>
                                                     </span>
                                                 )}
                                                 error={hasErrors('revokeEndpoint', revokeEndpoint, validating)}
@@ -1105,7 +1160,7 @@ function AddEditKeyManager(props) {
                                                             id='KeyManagers.AddEditKeyManager.form.userInfoEndpoint'
                                                             defaultMessage='UserInfo Endpoint'
                                                         />
-                                                        <span className={classes.error}>*</span>
+                                                        <StyledSpan>*</StyledSpan>
                                                     </span>
                                                 )}
                                                 fullWidth
@@ -1149,7 +1204,7 @@ function AddEditKeyManager(props) {
                                                                 form.scopeManagementEndpoint'
                                                             defaultMessage='Scope Management Endpoint'
                                                         />
-                                                        <span className={classes.error}>*</span>
+                                                        <StyledSpan>*</StyledSpan>
                                                     </span>
                                                 )}
                                                 fullWidth
@@ -1171,7 +1226,7 @@ function AddEditKeyManager(props) {
 
                                     <Grid item xs={12}>
                                         <Box marginTop={2} marginBottom={2}>
-                                            <hr className={classes.hr} />
+                                            <StyledHr />
                                         </Box>
                                     </Grid>
                                     <Grid item xs={12} md={12} lg={3}>
@@ -1253,7 +1308,7 @@ function AddEditKeyManager(props) {
                         <>
                             <Grid item xs={12}>
                                 <Box marginTop={2} marginBottom={2}>
-                                    <hr className={classes.hr} />
+                                    <StyledHr />
                                 </Box>
                             </Grid>
 
@@ -1294,7 +1349,7 @@ function AddEditKeyManager(props) {
                                                     id='Admin.KeyManager.label.token.audience'
                                                     defaultMessage='Allowed Token Audience '
                                                 />
-                                                <span className={classes.error}>*</span>
+                                                <StyledSpan>*</StyledSpan>
                                             </span>
                                         )}
                                         onChange={onChange}
@@ -1325,7 +1380,7 @@ function AddEditKeyManager(props) {
                                                         id='KeyManagers.AddEditTokenExchangeIDP.form.wellKnownUrl'
                                                         defaultMessage='Well-known URL'
                                                     />
-                                                    <span className={classes.error}>*</span>
+                                                    <StyledSpan>*</StyledSpan>
                                                 </span>
                                             )}
                                             helperText={(
@@ -1365,7 +1420,7 @@ function AddEditKeyManager(props) {
                                                     id='KeyManagers.AddEditTokenExchangeIDP.form.Issuer'
                                                     defaultMessage='Issuer'
                                                 />
-                                                <span className={classes.error}>*</span>
+                                                <StyledSpan>*</StyledSpan>
                                             </span>
                                         )}
                                         error={hasErrors('issuer', issuer, validating)}
@@ -1388,7 +1443,7 @@ function AddEditKeyManager(props) {
                                                     id='KeyManagers.AddEditTokenExchangeIDP.form.tokenEndpoint'
                                                     defaultMessage='Token Endpoint'
                                                 />
-                                                <span className={classes.error}>*</span>
+                                                <StyledSpan>*</StyledSpan>
                                             </span>
                                         )}
                                         error={hasErrors('tokenEndpoint', tokenEndpoint, validating)}
@@ -1407,7 +1462,7 @@ function AddEditKeyManager(props) {
                         <>
                             <Grid item xs={12}>
                                 <Box marginTop={2} marginBottom={2}>
-                                    <hr className={classes.hr} />
+                                    <StyledHr />
                                 </Box>
                             </Grid>
                             <Grid item xs={12} md={12} lg={3}>
@@ -1493,7 +1548,7 @@ function AddEditKeyManager(props) {
                                                     id='KeyManagers.AddEditKeyManager.form.Issuer'
                                                     defaultMessage='Issuer'
                                                 />
-                                                <span className={classes.error}>*</span>
+                                                <StyledSpan>*</StyledSpan>
                                             </span>
                                         )}
                                         error={hasErrors('issuer', issuer, validating)}
@@ -1517,7 +1572,7 @@ function AddEditKeyManager(props) {
                         <>
                             <Grid item xs={12}>
                                 <Box marginTop={2} marginBottom={2}>
-                                    <hr className={classes.hr} />
+                                    <StyledHr />
                                 </Box>
                             </Grid>
                             <Grid item xs={12} md={12} lg={3}>
@@ -1547,24 +1602,22 @@ function AddEditKeyManager(props) {
                             </Grid>
                             <Grid item xs={12} md={12} lg={9}>
                                 <Box component='div' m={1}>
-                                    <ChipInput
-                                        classes={{
-                                            root: classes.chipInputRoot,
-                                            helperText: classes.chipInputHelpText,
-                                            chipContainer: classes.chipContainer,
-                                        }}
+                                    <MuiChipsInput
+                                        variant='outlined'
+                                        fullWidth
                                         value={availableGrantTypes}
-                                        onAdd={(grantType) => {
+                                        onAddChip={(grantType) => {
                                             availableGrantTypes.push(grantType);
                                         }}
-                                        onDelete={(grantToDelete) => {
+                                        onDeleteChip={(grantToDelete) => {
                                             const filteredGrantTypes = availableGrantTypes.filter(
                                                 (grantType) => grantType !== grantToDelete,
                                             );
                                             dispatch({ field: 'availableGrantTypes', value: filteredGrantTypes });
                                         }}
+                                        placeholder='Type Grant Types and press Enter'
                                         helperText={(
-                                            <div className={classes.chipHelper}>
+                                            <div style={{ position: 'absolute', marginTop: '10px' }}>
                                                 {intl.formatMessage({
                                                     id: 'KeyManagers.AddEditKeyManager.form.claim.help',
                                                     defaultMessage: 'Type Available Grant Types and '
@@ -1579,7 +1632,7 @@ function AddEditKeyManager(props) {
                     )}
                     <Grid item xs={12}>
                         <Box marginTop={2} marginBottom={2}>
-                            <hr className={classes.hr} />
+                            <StyledHr />
                         </Box>
                     </Grid>
                     <Grid item xs={12} md={12} lg={3}>
@@ -1613,7 +1666,7 @@ function AddEditKeyManager(props) {
                     </Grid>
                     <Grid item xs={12}>
                         <Box marginTop={2} marginBottom={2}>
-                            <hr className={classes.hr} />
+                            <StyledHr />
                         </Box>
                     </Grid>
                     {enableDirectToken && (
@@ -1661,13 +1714,152 @@ function AddEditKeyManager(props) {
                                      </Grid>
                                      <Grid item xs={12}>
                                          <Box marginTop={2} marginBottom={2}>
-                                             <hr className={classes.hr} />
+                                             <StyledHr />
                                          </Box>
                                      </Grid>
                                  </>
                              )}
                         </>
                     )}
+                    {/* Permissions */}
+                    <Grid item xs={12} md={12} lg={3}>
+                        <Box display='flex' flexDirection='row' alignItems='center'>
+                            <Box flex='1'>
+                                <Typography color='inherit' variant='subtitle2' component='div'>
+                                    <FormattedMessage
+                                        id='KeyManager.permissions'
+                                        defaultMessage='Permissions'
+                                    />
+                                </Typography>
+                                <Typography color='inherit' variant='caption' component='p'>
+                                    <FormattedMessage
+                                        id='KeyManager.AddEditKeyManager.permissions.add.description'
+                                        defaultMessage='Permissions for the Key Manager'
+                                    />
+                                </Typography>
+                            </Box>
+                        </Box>
+                    </Grid>
+                    <Grid item xs={12} md={12} lg={9}>
+                        <Box component='div' m={1}>
+                            <FormControl
+                                variant='outlined'
+                                fullWidth
+                            >
+                                <InputLabel sx={{ position: 'relative' }}>
+                                    <FormattedMessage
+                                        defaultMessage='Key Manager Permission'
+                                        id='Admin.KeyManager.permission.type'
+                                    />
+                                    <StyledSpan>*</StyledSpan>
+                                </InputLabel>
+                                <Select
+                                    variant='outlined'
+                                    id='Admin.KeyManager.form.permission.select'
+                                    name='KeyManagerPermissionRestrict'
+                                    value={permissionStatus}
+                                    onChange={onChange}
+                                    data-testid='key-manager-permission-select'
+                                >
+                                    <MenuItem key='PUBLIC' value='PUBLIC'>
+                                        Public
+                                    </MenuItem>
+                                    <MenuItem key='ALLOW' value='ALLOW'>
+                                        Allow for role(s)
+                                    </MenuItem>
+                                    <MenuItem key='DENY' value='DENY'>
+                                        Deny for role(s)
+                                    </MenuItem>
+                                </Select>
+                            </FormControl>
+                            {
+                                (permissionStatus === 'ALLOW' || permissionStatus === 'DENY')
+                                && (
+                                    <Box
+                                        display='flex'
+                                        flexDirection='row'
+                                        alignItems='center'
+                                        sx={{ m: '20px 0px' }}
+                                    >
+                                        <MuiChipsInput
+                                            fullWidth
+                                            label='Roles'
+                                            InputLabelProps={{
+                                                shrink: true,
+                                            }}
+                                            name='KeyManagerPermissions'
+                                            variant='outlined'
+                                            value={validRoles.concat(invalidRoles)}
+                                            placeholder='Type roles and press Enter'
+                                            clearInputOnBlur
+                                            data-testid='key-manager-permission-roles'
+                                            InputProps={{
+                                                endAdornment: !roleValidity && (
+                                                    <InputAdornment
+                                                        position='end'
+                                                        sx={{ position: 'absolute', right: '25px', top: '50%' }}
+                                                    >
+                                                        <Error color='error' />
+                                                    </InputAdornment>
+                                                ),
+                                            }}
+                                            onAddChip={handleRoleAddition}
+                                            renderChip={(ChipComponent, key, ChipProps) => (
+                                                <ChipComponent
+                                                    key={ChipProps.label}
+                                                    label={ChipProps.label}
+                                                    onDelete={() => handleRoleDeletion(ChipProps.label)}
+                                                    data-testid={ChipProps.label}
+                                                    style={{
+                                                        backgroundColor: invalidRoles.includes(ChipProps.label)
+                                                            ? red[300] : null,
+                                                        margin: '8px 8px 8px 0',
+                                                        float: 'left',
+                                                    }}
+                                                />
+                                            )}
+                                            error={!roleValidity}
+                                            helperText={
+                                                !roleValidity ? (
+                                                    <FormattedMessage
+                                                        id='Apis.Details.Scopes.Roles.Invalid'
+                                                        defaultMessage='Invalid Role(s) Found'
+                                                    />
+                                                ) : [
+                                                    (permissionStatus === 'ALLOW'
+                                                        ? (
+                                                            <FormattedMessage
+                                                                id='KeyManager.enter.permission.allowed'
+                                                                defaultMessage='Use of this Key-Manager is
+                                                                 "Allowed" for above roles.'
+                                                            />
+                                                        )
+                                                        : (
+                                                            <FormattedMessage
+                                                                id='KeyManager.enter.permission.denied'
+                                                                defaultMessage='Use of this Key-Manager is
+                                                                 "Denied" for above roles.'
+                                                            />
+                                                        )
+                                                    ),
+                                                    ' ',
+                                                    <FormattedMessage
+                                                        id='Apis.Details.Scopes.CreateScope.roles.help'
+                                                        defaultMessage='Enter a valid role and press `Enter`'
+                                                    />,
+                                                ]
+                                            }
+                                        />
+                                    </Box>
+                                )
+                            }
+                        </Box>
+                    </Grid>
+                    <Grid item xs={12}>
+                        <Box marginTop={2} marginBottom={2}>
+                            <StyledHr />
+                        </Box>
+                    </Grid>
                     <Grid item xs={12} md={12} lg={3}>
                         <Typography
                             color='inherit'
@@ -1773,7 +1965,7 @@ function AddEditKeyManager(props) {
                                     </Typography>
                                 </Box>
                                 <Box>
-                                    <FormControl component='fieldset'>
+                                    <FormControl variant='standard' component='fieldset'>
                                         <RadioGroup
                                             aria-label={intl.formatMessage({
                                                 id: 'KeyManagers.AddEditKeyManager.token.validation.method',
@@ -1840,14 +2032,15 @@ function AddEditKeyManager(props) {
                                         />
                                     </Typography>
                                     <IconButton
-                                        className={clsx(classes.expand, {
-                                            [classes.expandOpen]: expanded,
-                                        })}
+                                        sx={{ marginLeft: 'auto' }}
                                         onClick={handleExpandClick}
                                         aria-expanded={expanded}
                                         aria-label='show more'
+                                        size='large'
                                     >
-                                        <ExpandMoreIcon />
+                                        <StyledExpandMoreIcon
+                                            className={expanded ? 'expandOpen' : 'expand'}
+                                        />
                                     </IconButton>
                                 </Box>
                                 <Box>
@@ -1894,14 +2087,15 @@ function AddEditKeyManager(props) {
                                             />
                                         </Typography>
                                         <IconButton
-                                            className={clsx(classes.expand, {
-                                                [classes.expandOpen]: expanded,
-                                            })}
+                                            sx={{ marginLeft: 'auto' }}
                                             onClick={handleExpandClick}
                                             aria-expanded={expanded}
                                             aria-label='show more'
+                                            size='large'
                                         >
-                                            <ExpandMoreIcon />
+                                            <StyledExpandMoreIcon
+                                                className={expanded ? 'expandOpen' : 'expand'}
+                                            />
                                         </IconButton>
                                     </Box>
                                     <Box>
@@ -1933,12 +2127,18 @@ function AddEditKeyManager(props) {
 
                     <Grid item xs={12}>
                         <Box marginTop={2} marginBottom={2}>
-                            <hr className={classes.hr} />
+                            <StyledHr />
                         </Box>
                     </Grid>
-                    <Grid item xs={12}>
+                    <Grid item xs={12} mb={2}>
                         <Box component='span' m={1}>
-                            <Button id='keymanager-add' variant='contained' color='primary' onClick={formSaveCallback}>
+                            <Button
+                                id='keymanager-add'
+                                variant='contained'
+                                color='primary'
+                                onClick={formSaveCallback}
+                                disabled={isGlobal && !isSuperAdmin}
+                            >
                                 {saving ? (<CircularProgress size={16} />) : (
                                     <>
                                         {id ? (
@@ -1957,7 +2157,7 @@ function AddEditKeyManager(props) {
                             </Button>
                         </Box>
                         <RouterLink to='/settings/key-managers'>
-                            <Button variant='contained'>
+                            <Button variant='outlined'>
                                 <FormattedMessage
                                     id='KeyManagers.AddEditKeyManager.form.cancel'
                                     defaultMessage='Cancel'
@@ -1968,7 +2168,7 @@ function AddEditKeyManager(props) {
                 </Grid>
             </Box>
 
-        </ContentBase>
+        </StyledContentBase>
     );
 }
 

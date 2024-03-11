@@ -18,6 +18,8 @@
 
 import 'swagger-ui-react/swagger-ui.css';
 
+import { styled } from '@mui/material/styles';
+
 import React, {
     Suspense,
     lazy,
@@ -30,21 +32,19 @@ import React, {
 
 import Alert from 'AppComponents/Shared/MuiAlert';
 import Api from 'AppData/api';
-import withStyles from '@material-ui/core/styles/withStyles';
-import { makeStyles } from '@material-ui/core/styles';
-import Box from '@material-ui/core/Box';
-import Button from '@material-ui/core/Button';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import CONSTS from 'AppData/Constants';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import CircularProgress from '@mui/material/CircularProgress';
 import { FormattedMessage } from 'react-intl';
-import Grid from '@material-ui/core/Grid';
-import LaunchIcon from '@material-ui/icons/Launch';
+import Grid from '@mui/material/Grid';
+import LaunchIcon from '@mui/icons-material/Launch';
 import { Link } from 'react-router-dom';
-import MenuItem from '@material-ui/core/MenuItem';
-import Paper from '@material-ui/core/Paper';
+import MenuItem from '@mui/material/MenuItem';
+import Paper from '@mui/material/Paper';
 import PropTypes from 'prop-types';
-import TextField from '@material-ui/core/TextField';
-import Typography from '@material-ui/core/Typography';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
 import Utils from 'AppData/Utils';
 import cloneDeep from 'lodash.clonedeep';
 import dayjs from 'dayjs';
@@ -54,34 +54,47 @@ import { usePublisherSettings } from 'AppComponents/Shared/AppContext';
 import { isRestricted } from 'AppData/AuthManager';
 import AdvertiseDetailsPanel from "AppComponents/Apis/Details/TryOut/AdvertiseDetailsPanel";
 
-// disabled because webpack magic comment for chunk name require to be in the same line
-// eslint-disable-next-line max-len
-const SwaggerUI = lazy(() => import('AppComponents/Apis/Details/TryOut/SwaggerUI' /* webpackChunkName: "TryoutConsoleSwaggerUI" */));
+const PREFIX = 'TryOutConsole';
 
-/**
- * @inheritdoc
- * @param {*} theme theme
- */
-const useStyles = makeStyles((theme) => ({
-    centerItems: {
+const classes = {
+    centerItems: `${PREFIX}-centerItems`,
+    tryoutHeading: `${PREFIX}-tryoutHeading`,
+    menuItem: `${PREFIX}-menuItem`,
+    tokenType: `${PREFIX}-tokenType`
+};
+
+
+const Root = styled('div')((
+    {
+        theme
+    }
+) => ({
+    [`& .${classes.centerItems}`]: {
         margin: 'auto',
     },
-    tryoutHeading: {
+
+    [`& .${classes.tryoutHeading}`]: {
         paddingTop: '20px',
         fontWeight: 400,
         display: 'block',
     },
-    menuItem: {
+
+    [`& .${classes.menuItem}`]: {
         color: theme.palette.getContrastText(theme.palette.background.paper),
     },
-    tokenType: {
+
+    [`& .${classes.tokenType}`]: {
         margin: 'auto',
         display: 'flex',
         '& .MuiButton-contained.Mui-disabled span.MuiButton-label': {
             color: '#6d6d6d',
         },
-    },
+    }
 }));
+
+// disabled because webpack magic comment for chunk name require to be in the same line
+// eslint-disable-next-line max-len
+const SwaggerUI = lazy(() => import('AppComponents/Apis/Details/TryOut/SwaggerUI' /* webpackChunkName: "TryoutConsoleSwaggerUI" */));
 
 dayjs.extend(relativeTime);
 
@@ -96,7 +109,7 @@ const tasksReducer = (state, action) => {
  * @extends {React.Component}
  */
 const TryOutConsole = () => {
-    const classes = useStyles();
+
     const [api] = useAPI();
     const [apiKey, setAPIKey] = useState('');
     const [deployments, setDeployments] = useState([]);
@@ -128,11 +141,12 @@ const TryOutConsole = () => {
             api.getDeployedRevisions(api.id).then((deploymentsResponse) => {
                 tasksStatusDispatcher({ name: 'getDeployments', status: { inProgress: false, completed: true } });
                 const currentDeployments = deploymentsResponse.body;
-                const currentDeploymentsWithDisplayName = currentDeployments.map((deploy) => {
-                    const gwEnvironment = publisherSettings.environment.find((e) => e.name === deploy.name);
-                    const displayName = (gwEnvironment ? gwEnvironment.displayName : deploy.name);
-                    return { ...deploy, displayName };
-                });
+                const currentDeploymentsWithDisplayName = currentDeployments
+                    .filter(deploy => deploy.status !== 'CREATED').map((deploy) => {
+                        const gwEnvironment = publisherSettings.environment.find((e) => e.name === deploy.name);
+                        const displayName = (gwEnvironment ? gwEnvironment.displayName : deploy.name);
+                        return { ...deploy, displayName };
+                    });
                 setDeployments(currentDeploymentsWithDisplayName);
                 if (currentDeploymentsWithDisplayName && currentDeploymentsWithDisplayName.length > 0) {
                     const [initialDeploymentSelection] = currentDeploymentsWithDisplayName;
@@ -145,7 +159,6 @@ const TryOutConsole = () => {
         }
     }, [publisherSettings]);
 
-    const isAPIProduct = api.type === 'APIPRODUCT';
     const isAdvertised = api.advertiseInfo && api.advertiseInfo.advertised;
     const setServersSpec = (spec, serverUrl) => {
         let schemes;
@@ -185,14 +198,12 @@ const TryOutConsole = () => {
                     }
                     if (transportPort !== -1) {
                         const baseURL = `${transport}://${selectedDeployment.vhost}:${transportPort}`;
-                        let url;
-                        if (isAPIProduct) {
+                        let url = `${baseURL}${pathSeparator}`
+                            + `${selectedDeploymentVhost.httpContext}${api.context}/${api.version}`;
+                        if (`${api.context}`.includes('{version}')) {
                             url = `${baseURL}${pathSeparator}`
-                                + `${selectedDeploymentVhost.httpContext}${api.context}`;
-                        } else {
-                            url = `${baseURL}${pathSeparator}`
-                                + `${selectedDeploymentVhost.httpContext}${api.context}/${api.version}`
-                                    .replace('{version}', `${api.version}`);
+                                        + `${selectedDeploymentVhost.httpContext}${api.context}`
+                                            .replaceAll('{version}', `${api.version}`);
                         }
                         return {url};
                     }
@@ -211,12 +222,15 @@ const TryOutConsole = () => {
                 }
                 const host = `${selectedDeploymentVhost.host}:${transportPort}`;
                 let basePath;
-                if (isAPIProduct) {
-                    basePath = `${pathSeparator}${selectedDeploymentVhost.httpContext}${api.context}`;
-                } else {
-                    basePath = `${pathSeparator}${selectedDeploymentVhost.httpContext}${api.context}/${api.version}`
-                        .replace('{version}', `${api.version}`);
+
+                basePath = `${pathSeparator}${selectedDeploymentVhost.
+                    httpContext}${api.context}/${api.version}`;
+
+                if (`${api.context}`.includes('{version}')) {
+                    basePath = `${pathSeparator}${selectedDeploymentVhost
+                        .httpContext}${api.context}`.replaceAll('{version}', `${api.version}`);
                 }
+
                 let schemes = api.transport.slice().sort((a, b) => ((a > b) ? -1 : 1));
                 if (selectedDeploymentVhost.httpPort === -1){
                     schemes = schemes.filter(item => item !== 'http');
@@ -287,143 +301,149 @@ const TryOutConsole = () => {
     };
 
     return (
-        <>
+        (<Root>
             <Typography id='itest-api-details-try-out-head' variant='h4' component='h2'>
                 <FormattedMessage id='Apis.Details.ApiConsole.ApiConsole.title' defaultMessage='Try Out' />
             </Typography>
-            <Paper elevation={0}>
+            <Paper elevation={0} sx={{ mt: 1, p: 3 }}>
                 {(!api.advertiseInfo || !api.advertiseInfo.advertised) ? (
                     <>
-                        <Box display='flex' justifyContent='center'>
-                            <Grid xs={11} md={6} item>
-                                <Typography variant='h5' component='h3' color='textPrimary'>
-                                    <FormattedMessage
-                                        id='api.console.security.heading'
-                                        defaultMessage='Security'
-                                    />
-                                </Typography>
-                                <TextField
-                                    fullWidth
-                                    label={(
+                        <Box display='flex' justifyContent='center' sx={{ mb: 3 }}>
+                            <Grid container>
+                                <Grid item xs={3} />
+                                <Grid xs={6} md={6} item>
+                                    <Typography variant='h5' component='h3' color='textPrimary'>
                                         <FormattedMessage
-                                            id='Apis.Details.TryOutConsole.token.label'
-                                            defaultMessage='Internal API Key'
+                                            id='api.console.security.heading'
+                                            defaultMessage='Security'
                                         />
-                                    )}
-                                    type='password'
-                                    value={apiKey}
-                                    helperText={decodedJWT ? (
-                                        <Box color='success.main'>
-                                            {`Expires ${dayjs.unix(decodedJWT.payload.exp).fromNow()}`}
-                                        </Box>
-                                    ) : 'Generate or provide an internal API Key'}
-                                    margin='normal'
-                                    variant='outlined'
-                                    name='internal'
-                                    multiline
-                                    rows={4}
-                                    onChange={(e) => setAPIKey(e.target.value)}
-                                    disabled={isAPIRetired}
-                                />
-                                <Button
-                                    onClick={generateInternalKey}
-                                    variant='contained'
-                                    color='primary'
-                                    disabled={tasksStatus.generateKey.inProgress || isAPIRetired
-                                    || isRestricted(['apim:api_create', 'apim:api_publish'], api)}
-                                >
-                                    <FormattedMessage
-                                        id='Apis.Details.ApiConsole.generate.test.key'
-                                        defaultMessage='Generate Key'
+                                    </Typography>
+                                    <TextField
+                                        fullWidth
+                                        label={(
+                                            <FormattedMessage
+                                                id='Apis.Details.TryOutConsole.token.label'
+                                                defaultMessage='Internal API Key'
+                                            />
+                                        )}
+                                        type='password'
+                                        value={apiKey}
+                                        helperText={decodedJWT ? (
+                                            <Box color='success.main'>
+                                                {`Expires ${dayjs.unix(decodedJWT.payload.exp).fromNow()}`}
+                                            </Box>
+                                        ) : 'Generate or provide an internal API Key'}
+                                        margin='normal'
+                                        variant='outlined'
+                                        name='internal'
+                                        multiline
+                                        rows={4}
+                                        onChange={(e) => setAPIKey(e.target.value)}
+                                        disabled={isAPIRetired}
                                     />
-                                </Button>
-                                {tasksStatus.generateKey.inProgress
-                                && (
-                                    <Box
-                                        display='inline'
-                                        position='absolute'
-                                        mt={1}
-                                        ml={-8}
+                                    <Button
+                                        onClick={generateInternalKey}
+                                        variant='contained'
+                                        color='primary'
+                                        disabled={tasksStatus.generateKey.inProgress || isAPIRetired
+                                        || isRestricted(['apim:api_create', 'apim:api_publish'], api)}
                                     >
-                                        <CircularProgress size={24} />
-                                    </Box>
-                                )}
+                                        <FormattedMessage
+                                            id='Apis.Details.ApiConsole.generate.test.key'
+                                            defaultMessage='Generate Key'
+                                        />
+                                    </Button>
+                                    {tasksStatus.generateKey.inProgress
+                                    && (
+                                        <Box
+                                            display='inline'
+                                            position='absolute'
+                                            mt={1}
+                                            ml={-8}
+                                        >
+                                            <CircularProgress size={24} />
+                                        </Box>
+                                    )}
+                                </Grid>
                             </Grid>
                         </Box>
-                        <Box my={3} display='flex' justifyContent='center'>
-                            <Grid xs={11} md={6} item>
-                                {(tasksStatus.getDeployments.completed && !deployments.length && !isAPIRetired) && (
-                                    <Alert variant='outlined' severity='error'>
-                                        <FormattedMessage
-                                            id='Apis.Details.ApiConsole.deployments.no'
-                                            defaultMessage={'{artifactType} is not deployed yet! Please deploy '
-                                            + 'the {artifactType} before trying out'}
-                                            values={{ artifactType: api.isRevision ? 'Revision' : 'API' }}
-                                        />
-                                        <Link to={'/apis/' + api.id + '/deployments'}>
-                                            <LaunchIcon
-                                                color='primary'
-                                                fontSize='small'
-                                            />
-                                        </Link>
-                                    </Alert>
-                                )}
-                                {isAPIRetired && (
-                                    <Alert variant='outlined' severity='error'>
-                                        <FormattedMessage
-                                            id='Apis.Details.ApiConsole.deployments.isAPIRetired'
-                                            defaultMessage='Can not Try Out retired APIs!'
-                                        />
-                                    </Alert>
-                                )}
-                                {((deployments && deployments.length > 0))
-                                && (
-                                    <>
-                                        <Typography
-                                            variant='h5'
-                                            component='h3'
-                                            color='textPrimary'
-                                        >
+                        <Box display='flex' justifyContent='center'>
+                            <Grid container>
+                                <Grid item xs={3} />
+                                <Grid xs={6} md={6} item>
+                                    {(tasksStatus.getDeployments.completed && !deployments.length && !isAPIRetired) && (
+                                        <Alert variant='outlined' severity='error'>
                                             <FormattedMessage
-                                                id='Apis.Details.ApiConsole.deployments.api.gateways'
-                                                defaultMessage='API Gateways'
+                                                id='Apis.Details.ApiConsole.deployments.no'
+                                                defaultMessage={'{artifactType} is not deployed yet! Please deploy '
+                                                + 'the {artifactType} before trying out'}
+                                                values={{ artifactType: api.isRevision ? 'Revision' : 'API' }}
                                             />
-                                        </Typography>
-                                        <TextField
-                                            fullWidth
-                                            select
-                                            label={(
-                                                <FormattedMessage
-                                                    defaultMessage='Environment'
-                                                    id='Apis.Details.ApiConsole.environment'
+                                            <Link to={'/apis/' + api.id + '/deployments'}>
+                                                <LaunchIcon
+                                                    color='primary'
+                                                    fontSize='small'
                                                 />
-                                            )}
-                                            value={(selectedDeployment && selectedDeployment.name) || ''}
-                                            name='selectedEnvironment'
-                                            onChange={deploymentSelectionHandler}
-                                            margin='normal'
-                                            variant='outlined'
-                                            SelectProps={{
-                                                MenuProps: {
-                                                    anchorOrigin: {
-                                                        vertical: 'bottom',
-                                                        horizontal: 'left',
+                                            </Link>
+                                        </Alert>
+                                    )}
+                                    {isAPIRetired && (
+                                        <Alert variant='outlined' severity='error'>
+                                            <FormattedMessage
+                                                id='Apis.Details.ApiConsole.deployments.isAPIRetired'
+                                                defaultMessage='Can not Try Out retired APIs!'
+                                            />
+                                        </Alert>
+                                    )}
+                                    {((deployments && deployments.length > 0))
+                                    && (
+                                        <>
+                                            <Typography
+                                                variant='h5'
+                                                component='h3'
+                                                color='textPrimary'
+                                            >
+                                                <FormattedMessage
+                                                    id='Apis.Details.ApiConsole.deployments.api.gateways'
+                                                    defaultMessage='API Gateways'
+                                                />
+                                            </Typography>
+                                            <TextField
+                                                fullWidth
+                                                select
+                                                label={(
+                                                    <FormattedMessage
+                                                        defaultMessage='Environment'
+                                                        id='Apis.Details.ApiConsole.environment'
+                                                    />
+                                                )}
+                                                value={(selectedDeployment && selectedDeployment.name) || ''}
+                                                name='selectedEnvironment'
+                                                onChange={deploymentSelectionHandler}
+                                                margin='normal'
+                                                variant='outlined'
+                                                SelectProps={{
+                                                    MenuProps: {
+                                                        anchorOrigin: {
+                                                            vertical: 'bottom',
+                                                            horizontal: 'left',
+                                                        },
+                                                        getContentAnchorEl: null,
                                                     },
-                                                    getContentAnchorEl: null,
-                                                },
-                                            }}
-                                        >
-                                            {deployments.map((deployment) => (
-                                                <MenuItem
-                                                    value={deployment.name}
-                                                    key={deployment.name}
-                                                >
-                                                    {deployment.displayName}
-                                                </MenuItem>
-                                            ))}
-                                        </TextField>
-                                    </>
-                                )}
+                                                }}
+                                            >
+                                                {deployments.map((deployment) => (
+                                                    <MenuItem
+                                                        value={deployment.name}
+                                                        key={deployment.name}
+                                                    >
+                                                        {deployment.displayName}
+                                                    </MenuItem>
+                                                ))}
+                                            </TextField>
+                                        </>
+                                    )}
+                                </Grid>
                             </Grid>
                         </Box>
                     </>
@@ -454,7 +474,7 @@ const TryOutConsole = () => {
                     </Suspense>
                 ) : <CircularProgress />}
             </Paper>
-        </>
+        </Root>)
     );
 };
 TryOutConsole.propTypes = {
@@ -472,4 +492,4 @@ TryOutConsole.propTypes = {
     }).isRequired,
 };
 
-export default withStyles(makeStyles)(TryOutConsole);
+export default (TryOutConsole);

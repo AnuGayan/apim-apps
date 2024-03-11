@@ -18,40 +18,32 @@
 
 import React, { useReducer, useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import TextField from '@material-ui/core/TextField';
-import DialogContentText from '@material-ui/core/DialogContentText';
+import TextField from '@mui/material/TextField';
+import DialogContentText from '@mui/material/DialogContentText';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { makeStyles } from '@material-ui/core/styles';
 import FormDialogBase from 'AppComponents/AdminPages/Addons/FormDialogBase';
 import {
     Typography, RadioGroup, Radio, FormControlLabel, FormControl, Grid, Select, MenuItem,
-} from '@material-ui/core';
+} from '@mui/material';
 import API from 'AppData/api';
 import Alert from 'AppComponents/Shared/Alert';
 import Joi from '@hapi/joi';
 
-const useStyles = makeStyles((theme) => ({
-    error: {
-        color: theme.palette.error.dark,
-    },
-    dialog: {
-        minWidth: theme.spacing(150),
-
-    },
+const styles = {
     quotaHeading: {
-        marginTop: theme.spacing(3),
-        marginBottom: theme.spacing(2),
+        marginTop: 3,
+        marginBottom: 2,
     },
     unitTime: {
         display: 'flex',
-        minWidth: theme.spacing(60),
+        minWidth: 60,
     },
     unitTimeSelection: {
-        marginTop: theme.spacing(2.6),
-        marginLeft: theme.spacing(2),
-        minWidth: theme.spacing(15),
+        marginTop: 1,
+        marginLeft: 2,
+        minWidth: 140,
     },
-}));
+};
 
 /**
  * Reducer
@@ -96,6 +88,16 @@ function reducer(state, { field, value }) {
             };
         case 'editDetails':
             return value;
+        case 'rateLimitCount':
+            return {
+                ...state,
+                burstLimit: { ...state.burstLimit, [field]: value },
+            };
+        case 'rateLimitTimeUnit':
+            return {
+                ...state,
+                burstLimit: { ...state.burstLimit, [field]: value },
+            };
         default:
             return state;
     }
@@ -106,7 +108,6 @@ function reducer(state, { field, value }) {
  * @returns {JSX} Header AppBar components.
  */
 function AddEdit(props) {
-    const classes = useStyles();
     const intl = useIntl();
     const {
         updateList, icon, triggerButtonText, title, dataRow,
@@ -123,12 +124,19 @@ function AddEdit(props) {
             dataAmount: '',
             dataUnit: 'KB',
         },
+        burstLimit: {
+            rateLimitCount: '',
+            rateLimitTimeUnit: 'sec',
+        },
     });
 
     const [state, dispatch] = useReducer(reducer, initialState);
     const {
         policyName, description, defaultLimit: {
             requestCount, timeUnit, unitTime, type, dataAmount, dataUnit,
+        },
+        burstLimit: {
+            rateLimitCount, rateLimitTimeUnit,
         },
     } = state;
     const [validationError, setValidationError] = useState([]);
@@ -146,6 +154,10 @@ function AddEdit(props) {
                 type: 'REQUESTCOUNTLIMIT',
                 dataAmount: '',
                 dataUnit: 'KB',
+            },
+            burstLimit: {
+                rateLimitCount: '',
+                rateLimitTimeUnit: 'sec',
             },
         });
     }, []);
@@ -256,6 +268,10 @@ function AddEdit(props) {
                         unitTime: state.defaultLimit.unitTime,
                     },
                 },
+                burstLimit: {
+                    rateLimitCount: state.burstLimit.rateLimitCount,
+                    rateLimitTimeUnit: state.burstLimit.rateLimitTimeUnit,
+                },
             };
         } else {
             applicationThrottlingPolicy = {
@@ -270,7 +286,15 @@ function AddEdit(props) {
                         unitTime: state.defaultLimit.unitTime,
                     },
                 },
+                burstLimit: {
+                    rateLimitCount: state.burstLimit.rateLimitCount,
+                    rateLimitTimeUnit: state.burstLimit.rateLimitTimeUnit,
+                },
             };
+        }
+
+        if (!applicationThrottlingPolicy.burstLimit.rateLimitCount) {
+            applicationThrottlingPolicy.burstLimit = null;
         }
 
         if (dataRow) {
@@ -340,6 +364,11 @@ function AddEdit(props) {
                             dataAmount: '',
                             dataUnit: 'KB',
                         },
+                        burstLimit: {
+                            rateLimitCount: result.body.burstLimit.rateLimitCount,
+                            rateLimitTimeUnit: (result.body.burstLimit.rateLimitCount === 0) ? 'sec'
+                                : result.body.burstLimit.rateLimitTimeUnit,
+                        },
                     };
                 } else {
                     editState = {
@@ -352,6 +381,11 @@ function AddEdit(props) {
                             type: result.body.defaultLimit.type,
                             dataAmount: result.body.defaultLimit.bandwidth.dataAmount,
                             dataUnit: result.body.defaultLimit.bandwidth.dataUnit,
+                        },
+                        burstLimit: {
+                            rateLimitCount: result.body.burstLimit.rateLimitCount,
+                            rateLimitTimeUnit: (result.body.burstLimit.rateLimitCount === 0) ? 'sec'
+                                : result.body.burstLimit.rateLimitTimeUnit,
                         },
                     };
                 }
@@ -419,14 +453,14 @@ function AddEdit(props) {
                 onChange={onChange}
             />
             <DialogContentText>
-                <Typography variant='h6' className={classes.quotaHeading}>
+                <Typography variant='h6' sx={styles.quotaHeading}>
                     <FormattedMessage
                         id='Admin.Throttling.Application.Throttling.Policy.add.quota.limits.details'
                         defaultMessage='Quota Limits'
                     />
                 </Typography>
             </DialogContentText>
-            <FormControl component='fieldset'>
+            <FormControl variant='outlined' component='fieldset'>
                 <RadioGroup
                     row
                     aria-label='position'
@@ -475,7 +509,7 @@ function AddEdit(props) {
                             )}
                     />
                 ) : (
-                    <Grid className={classes.unitTime}>
+                    <Grid sx={styles.unitTime}>
                         <TextField
                             margin='dense'
                             name='dataAmount'
@@ -501,13 +535,13 @@ function AddEdit(props) {
                                     />
                                 )}
                         />
-                        <FormControl className={classes.unitTimeSelection}>
+                        <FormControl variant='outlined' sx={styles.unitTimeSelection}>
                             <Select
+                                variant='outlined'
                                 labelId='demo-simple-select-label'
                                 name='dataUnit'
                                 value={dataUnit}
                                 onChange={onChange}
-                                fullWidth
                             >
                                 <MenuItem value='KB'>KB</MenuItem>
                                 <MenuItem value='MB'>MB</MenuItem>
@@ -517,7 +551,7 @@ function AddEdit(props) {
                     </Grid>
 
                 )}
-                <Grid className={classes.unitTime}>
+                <Grid sx={styles.unitTime}>
                     <TextField
                         margin='dense'
                         name='unitTime'
@@ -542,8 +576,9 @@ function AddEdit(props) {
                                 />
                             )}
                     />
-                    <FormControl className={classes.unitTimeSelection}>
+                    <FormControl variant='outlined' sx={styles.unitTimeSelection}>
                         <Select
+                            variant='outlined'
                             labelId='demo-simple-select-label'
                             name='timeUnit'
                             value={timeUnit}
@@ -560,6 +595,54 @@ function AddEdit(props) {
                     </FormControl>
                 </Grid>
             </FormControl>
+            {/* Burst Control (Rate Limiting) */}
+            <DialogContentText>
+                <Typography variant='h6' sx={styles.quotaHeading}>
+                    <FormattedMessage
+                        id='Admin.Throttling.Application.Throttling.Policy.add.burst.limits.details'
+                        defaultMessage='Burst Control (Rate Limiting)'
+                    />
+                </Typography>
+                <Typography color='inherit' variant='caption' component='p'>
+                    <FormattedMessage
+                        id='Admin.Throttling.Application.AddEdit.burst.control.add.description'
+                        defaultMessage='Define Burst Control Limits (optional)'
+                    />
+                </Typography>
+            </DialogContentText>
+            <Grid sx={styles.unitTime}>
+                <TextField
+                    margin='dense'
+                    name='rateLimitCount'
+                    value={rateLimitCount}
+                    type='number'
+                    onChange={onChange}
+                    label={(
+                        <FormattedMessage
+                            id='Throttling.Application.AddEdit.form.request.rate'
+                            defaultMessage='Request Rate'
+                        />
+                    )}
+                    fullWidth
+                    helperText={intl.formatMessage({
+                        id: 'Throttling.Application.AddEdit.burst.control.limit',
+                        defaultMessage: 'Number of requests for burst control',
+                    })}
+                    variant='outlined'
+                />
+                <FormControl variant='outlined' sx={styles.unitTimeSelection}>
+                    <Select
+                        variant='outlined'
+                        name='rateLimitTimeUnit'
+                        value={rateLimitTimeUnit}
+                        fullWidth
+                        onChange={onChange}
+                    >
+                        <MenuItem value='sec'>Requests/sec</MenuItem>
+                        <MenuItem value='min'>Requests/min</MenuItem>
+                    </Select>
+                </FormControl>
+            </Grid>
         </FormDialogBase>
     );
 }

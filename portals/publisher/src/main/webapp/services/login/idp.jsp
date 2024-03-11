@@ -1,5 +1,5 @@
 <%--
-  ~ Copyright (c) 2017, WSO2 LLC (http://www.wso2.org) All Rights Reserved.
+  ~ Copyright (c) 2017-2023, WSO2 LLC (https://www.wso2.com).
   ~
   ~ WSO2 LLC licenses this file to you under the Apache License,
   ~ Version 2.0 (the "License"); you may not use this file except
@@ -42,7 +42,8 @@
 
 <%@page trimDirectiveWhitespaces="true" %>
 
-<%    Log log = LogFactory.getLog(this.getClass());
+<%
+    Log log = LogFactory.getLog(this.getClass());
     log.debug("Services login DCR request");
     Map settings = Util.readJsonFile("/site/public/conf/settings.json", request.getServletContext());
     String appContext = Util.getAppContextForServerUrl((String) Util.readJsonObj(settings, "app.context"), (String) Util.readJsonObj(settings, "app.proxy_context_path"));
@@ -170,7 +171,16 @@
         }
     }
 
-    String authRequestParams = "?response_type=code&client_id=" + clientId + "&scope=" + scopes + "&state=" + state + "&redirect_uri=" + loginCallbackUrl;
+    boolean isPKCEEnabled = systemApplicationDAO.isPKCEEnabled(clientId);
+    String pkceParams = "";
+    if (isPKCEEnabled) {
+       String codeVerifier = APIUtil.generateCodeVerifier();
+       session.setAttribute("code_verifier", codeVerifier);
+       String codeChallenge = APIUtil.generateCodeChallenge(codeVerifier);
+       pkceParams = "&code_challenge=" + codeChallenge + "&code_challenge_method=S256";
+    }
+    String authRequestParams = "?response_type=code&client_id=" + clientId + "&scope=" + scopes + "&state=" + state + "&redirect_uri=" + loginCallbackUrl
+         + pkceParams;
     String queryString = request.getQueryString();
     if (queryString != null && queryString.equals("not-Login")) {
         authRequestParams += "&prompt=none";
@@ -184,5 +194,4 @@
         response.addCookie(cookie);
         response.sendRedirect(authorizeEndpoint + authRequestParams);
     }
-
 %>

@@ -16,41 +16,78 @@
  * under the License.
  */
 import React, { Component } from 'react';
+import { styled, useTheme } from '@mui/material/styles';
 import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
 import { Link } from 'react-router-dom';
-import Card from '@material-ui/core/Card';
-import CardActions from '@material-ui/core/CardActions';
-import CardContent from '@material-ui/core/CardContent';
-import CardMedia from '@material-ui/core/CardMedia';
+import Card from '@mui/material/Card';
+import CardActions from '@mui/material/CardActions';
+import CardContent from '@mui/material/CardContent';
+import CardMedia from '@mui/material/CardMedia';
 import { isRestricted } from 'AppData/AuthManager';
-import Typography from '@material-ui/core/Typography';
-import Chip from '@material-ui/core/Chip';
+import Typography from '@mui/material/Typography';
+import Chip from '@mui/material/Chip';
 import { FormattedMessage, injectIntl } from 'react-intl';
-import CircularProgress from '@material-ui/core/CircularProgress';
-import green from '@material-ui/core/colors/green';
+import CircularProgress from '@mui/material/CircularProgress';
 import API from 'AppData/api';
+import Popover from '@mui/material/Popover';
 import DeleteApiButton from 'AppComponents/Apis/Details/components/DeleteApiButton';
+import Configurations from 'Config';
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import EmailIcon from '@mui/icons-material/Email';
 
+import { green } from '@mui/material/colors';
 import BaseThumbnail from '../BaseThumbnail';
 
-const styles = (theme) => ({
-    card: {
+const PREFIX = 'ApiThumbClassic';
+
+const classes = {
+    card: `${PREFIX}-card`,
+    providerText: `${PREFIX}-providerText`,
+    apiDetails: `${PREFIX}-apiDetails`,
+    apiActions: `${PREFIX}-apiActions`,
+    deleteProgress: `${PREFIX}-deleteProgress`,
+    thumbHeader: `${PREFIX}-thumbHeader`,
+    imageWrapper: `${PREFIX}-imageWrapper`,
+    thumbContent: `${PREFIX}-thumbContent`,
+    thumbLeft: `${PREFIX}-thumbLeft`,
+    thumbRight: `${PREFIX}-thumbRight`,
+    thumbInfo: `${PREFIX}-thumbInfo`,
+    contextBox: `${PREFIX}-contextBox`,
+    imageOverlap: `${PREFIX}-imageOverlap`,
+    row: `${PREFIX}-row`,
+    textWrapper: `${PREFIX}-textWrapper`,
+    thumbBy: `${PREFIX}-thumbBy`,
+    thumbRightBy: `${PREFIX}-thumbRightBy`,
+    thumbRightByLabel: `${PREFIX}-thumbRightByLabel`,
+    ribbon: `${PREFIX}-ribbon`
+};
+
+const StyledCard = styled(Card)((
+    {
+        theme
+    }
+) => ({
+    [`&.${classes.card}`]: {
         margin: theme.spacing(3 / 2),
         maxWidth: theme.custom.thumbnail.width,
         transition: 'box-shadow 0.3s ease-in-out',
     },
-    providerText: {
+
+    [`& .${classes.providerText}`]: {
         textTransform: 'capitalize',
     },
-    apiDetails: { padding: theme.spacing(1) },
-    apiActions: { justifyContent: 'space-between', padding: `0px 0px ${theme.spacing(1)}px 8px` },
-    deleteProgress: {
+
+    [`& .${classes.apiDetails}`]: { padding: theme.spacing(1), paddingBottom: 0 },
+
+    [`& .${classes.apiActions}`]: { justifyContent: 'space-between', padding: `0px 0px ${theme.spacing(1)} 8px` },
+
+    [`& .${classes.deleteProgress}`]: {
         color: green[200],
         position: 'absolute',
         marginLeft: '200px',
     },
-    thumbHeader: {
+
+    [`& .${classes.thumbHeader}`]: {
         width: '90%',
         whiteSpace: 'nowrap',
         color: theme.palette.text.secondary,
@@ -60,7 +97,8 @@ const styles = (theme) => ({
         margin: 0,
         'padding-left': '5px',
     },
-    imageWrapper: {
+
+    [`& .${classes.imageWrapper}`]: {
         color: theme.palette.text.secondary,
         backgroundColor: theme.palette.background.paper,
         width: theme.custom.thumbnail.width + theme.spacing(1),
@@ -68,25 +106,30 @@ const styles = (theme) => ({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    thumbContent: {
+
+    [`& .${classes.thumbContent}`]: {
         width: theme.custom.thumbnail.width - theme.spacing(1),
         backgroundColor: theme.palette.background.paper,
         padding: theme.spacing(1),
     },
-    thumbLeft: {
+
+    [`& .${classes.thumbLeft}`]: {
         alignSelf: 'flex-start',
         flex: 1,
         width: '25%',
         'padding-left': '5px',
         'padding-right': '65px',
     },
-    thumbRight: {
+
+    [`& .${classes.thumbRight}`]: {
         alignSelf: 'flex-end',
     },
-    thumbInfo: {
+
+    [`& .${classes.thumbInfo}`]: {
         display: 'flex',
     },
-    contextBox: {
+
+    [`& .${classes.contextBox}`]: {
         width: '110px',
         whiteSpace: 'nowrap',
         overflow: 'hidden',
@@ -100,31 +143,38 @@ const styles = (theme) => ({
         'padding-bottom': 1.5,
         textAlign: 'left',
     },
-    imageOverlap: {
+
+    [`& .${classes.imageOverlap}`]: {
         position: 'absolute',
         bottom: 1,
         backgroundColor: theme.custom.thumbnail.contentBackgroundColor,
     },
-    row: {
+
+    [`& .${classes.row}`]: {
         display: 'inline-block',
     },
-    textWrapper: {
+
+    [`& .${classes.textWrapper}`]: {
         color: theme.palette.text.secondary,
         textDecoration: 'none',
     },
-    thumbBy: {
+
+    [`& .${classes.thumbBy}`]: {
         'padding-left': '5px',
     },
-    thumbRightBy: {
+
+    [`& .${classes.thumbRightBy}`]: {
         'margin-right': '5px',
         height: 18,
         borderRadius: 8,
     },
-    thumbRightByLabel: {
+
+    [`& .${classes.thumbRightByLabel}`]: {
         paddingLeft: 5,
         paddingRight: 5,
     },
-    ribbon: {
+
+    [`& .${classes.ribbon}`]: {
         fontFamily: theme.typography.fontFamily,
         fontSize: '12px',
         fontWeight: 800,
@@ -137,7 +187,27 @@ const styles = (theme) => ({
         textAlign: 'center',
         textTransform: 'uppercase',
     },
-});
+
+    [`& .${classes.truncate}`]: {
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        maxWidth: '175px',
+    },
+
+    [`& .${classes.popover}`]: {
+        pointerEvents: 'none',
+    },
+
+    [`& .${classes.paper}`]: {
+        padding: theme.spacing(1),
+        maxWidth: '300px',
+    },
+
+    [`& .${classes.typo}`]: {
+        display: 'flex'
+    },
+}));
 
 /**
  *
@@ -153,7 +223,14 @@ class APIThumb extends Component {
      */
     constructor(props) {
         super(props);
-        this.state = { isHover: false, loading: false };
+        this.state = { 
+            isHover: false, 
+            loading: false, 
+            businessAnchorEl: null, 
+            businessOpenPopover: false, 
+            technicalAnchorEl: null, 
+            technicalOpenPopover: false,
+        };
         this.toggleMouseOver = this.toggleMouseOver.bind(this);
         this.setLoading = this.setLoading.bind(this);
     }
@@ -178,17 +255,32 @@ class APIThumb extends Component {
         this.setState({ isHover: event.type === 'mouseover' });
     }
 
+    handleBusinessPopoverOpen = (event) => {
+        this.setState({ businessAnchorEl: event.currentTarget, businessOpenPopover: true });
+    };
+
+    handleBusinessPopoverClose = () => {
+        this.setState({ businessAnchorEl: null, businessOpenPopover: false });
+    };
+
+    handleTechnicalPopoverOpen = (event) => {
+        this.setState({ technicalAnchorEl: event.currentTarget, technicalOpenPopover: true });
+    };
+
+    handleTechnicalPopoverClose = () => {
+        this.setState({ technicalAnchorEl: null, technicalOpenPopover: false });
+    };
+
     /**
      * @inheritdoc
      * @returns {React.Component} @inheritdoc
      * @memberof APIThumb
      */
     render() {
-        const {
-            classes, api, isAPIProduct, theme, updateData,
-        } = this.props;
+        const { api, isAPIProduct, theme, updateData } = this.props;
         const { isHover, loading } = this.state;
         let overviewPath = '';
+        const { tileDisplayInfo } = Configurations.apis;
         if (api.apiType) {
             overviewPath = isAPIProduct ? `/api-products/${api.id}/overview` : `/apis/${api.id}/overview`;
         } else {
@@ -208,7 +300,7 @@ class APIThumb extends Component {
         }
 
         return (
-            <Card
+            <StyledCard
                 onMouseOver={this.toggleMouseOver}
                 onFocus={this.toggleMouseOver}
                 onMouseOut={this.toggleMouseOver}
@@ -220,14 +312,21 @@ class APIThumb extends Component {
                 {api.advertiseOnly && (
                     <div className={classes.ribbon} data-testid='third-party-api-card-label'>third party</div>
                 )}
-                <CardMedia
-                    src='None'
-                    component={BaseThumbnail}
-                    height={theme.custom.thumbnail.height}
-                    width={theme.custom.thumbnail.width}
-                    title='Thumbnail'
-                    api={api}
-                />
+                <div style={{ position: "relative" }}>
+                    <CardMedia
+                        src='None'
+                        component={BaseThumbnail}
+                        height={theme.custom.thumbnail.height}
+                        width={theme.custom.thumbnail.width}
+                        title='Thumbnail'
+                        api={api}
+                    />
+                    {api.monetizedInfo && tileDisplayInfo.showMonetizedState && 
+                        <div className={classes.thumbLeft} style={{ position: "absolute", bottom: 0 }}>
+                            <MonetizationOnIcon fontSize='medium' style={{ color: '#FFD700', paddingLeft: '2px' }} />
+                        </div>
+                    }
+                </div>
                 <CardContent className={classes.apiDetails}>
                     <div className={classes.textWrapper}>
                         <Link to={overviewPath}>
@@ -248,19 +347,17 @@ class APIThumb extends Component {
                         </Typography>
                     </div>
                     <div className={classes.thumbInfo}>
-                        {isAPIProduct ? null : (
-                            <div className={classes.row}>
-                                <div className={classes.thumbLeft}>
-                                    <Typography variant='subtitle1'>{api.version}</Typography>
-                                </div>
-
-                                <div className={classes.thumbLeft}>
-                                    <Typography variant='caption' gutterBottom align='left'>
-                                        <FormattedMessage defaultMessage='Version' id='Apis.Listing.ApiThumb.version' />
-                                    </Typography>
-                                </div>
+                        <div className={classes.row}>
+                            <div className={classes.thumbLeft}>
+                                <Typography variant='subtitle1'>{api.version}</Typography>
                             </div>
-                        )}
+
+                            <div className={classes.thumbLeft}>
+                                <Typography variant='caption' gutterBottom align='left'>
+                                    <FormattedMessage defaultMessage='Version' id='Apis.Listing.ApiThumb.version' />
+                                </Typography>
+                            </div>
+                        </div>
                         <div className={classes.row}>
                             <div className={classes.thumbRight}>
                                 <Typography variant='subtitle1' align='right' className={classes.contextBox}>
@@ -285,6 +382,139 @@ class APIThumb extends Component {
                             </div>
                         </div>
                     </div>
+                    {(tileDisplayInfo.showBusinessDetails || tileDisplayInfo.showTechnicalDetails) && (
+                        <>
+                            <hr />
+                            <div>
+                                <div className={classes.row}>
+                                    <div className={classes.thumbLeft}>
+                                        <Typography variant='body2' gutterBottom align='left'>
+                                            <FormattedMessage
+                                                defaultMessage='Owners'
+                                                id='Apis.Listing.ApiThumb.owners'
+                                            />
+                                        </Typography>
+                                    </div>
+                                    {tileDisplayInfo.showBusinessDetails &&
+                                        <div style={{ paddingLeft: '5px' }}>
+                                            <Typography
+                                                variant='caption'
+                                                gutterBottom
+                                                align='left'
+                                                onMouseEnter={this.handleBusinessPopoverOpen}
+                                                onMouseLeave={this.handleBusinessPopoverClose}
+                                                className={classes.typo}
+                                            >
+                                                <FormattedMessage
+                                                    defaultMessage='Business'
+                                                    id='Apis.Listing.ApiThumb.owners.business'
+                                                />
+                                                {' : '}
+                                                {api.businessOwner ? (api.businessOwner): (
+                                                    <span style={{ color: '#808080' }}>
+                                                        Not Provided
+                                                    </span>
+                                                )}
+                                            </Typography>
+                                            {api.businessOwnerEmail && (
+                                                <Popover
+                                                    id='mouse-over-popover'
+                                                    sx={{
+                                                        pointerEvents: 'none',
+                                                    }}
+                                                    open={this.state.businessOpenPopover}
+                                                    anchorEl={this.state.businessAnchorEl}
+                                                    anchorOrigin={{
+                                                        vertical: 'top',
+                                                        horizontal: 'right',
+                                                    }}
+                                                    transformOrigin={{
+                                                        vertical: 'bottom',
+                                                        horizontal: 'left',
+                                                    }}
+                                                    onClose={this.handleBusinessPopoverClose}
+                                                    disableRestoreFocus
+                                                >
+                                                    <div style={{
+                                                        display: 'flex',
+                                                        flexDirection: 'column'
+                                                    }}
+                                                    >
+                                                        <div style={{ display: 'flex', padding: '4px' }}>
+                                                            <EmailIcon fontSize='small' />
+                                                            <Typography
+                                                                variant='body2'
+                                                                style={{ marginLeft: '8px' }}
+                                                            >
+                                                                {api.businessOwnerEmail}
+                                                            </Typography>
+                                                        </div>
+                                                    </div>
+                                                </Popover>
+                                            )}
+                                        </div>}
+                                    {tileDisplayInfo.showTechnicalDetails &&
+                                        <div style={{ paddingLeft: '5px' }}>
+                                            <Typography
+                                                variant='caption'
+                                                gutterBottom align='left'
+                                                onMouseEnter={this.handleTechnicalPopoverOpen}
+                                                onMouseLeave={this.handleTechnicalPopoverClose}
+                                                className={classes.typo}
+                                            >
+                                                <FormattedMessage
+                                                    defaultMessage='Technical'
+                                                    id='Apis.Listing.ApiThumb.owners.technical'
+                                                />
+                                                {' : '}
+                                                {api.technicalOwner ? (api.technicalOwner): (
+                                                    <span style={{ color: '#808080' }}>
+                                                        Not Provided
+                                                    </span>
+                                                )}
+                                            </Typography>
+                                            {api.technicalOwnerEmail && (
+                                                <Popover
+                                                    id='mouse-over-popover'
+                                                    sx={{
+                                                        pointerEvents: 'none',
+                                                    }}
+                                                    open={this.state.technicalOpenPopover}
+                                                    anchorEl={this.state.technicalAnchorEl}
+                                                    anchorOrigin={{
+                                                        vertical: 'top',
+                                                        horizontal: 'right',
+                                                    }}
+                                                    transformOrigin={{
+                                                        vertical: 'bottom',
+                                                        horizontal: 'left',
+                                                    }}
+                                                    onClose={this.handleTechnicalPopoverClose}
+                                                    disableRestoreFocus
+                                                >
+                                                    <div style={{
+                                                        display: 'flex',
+                                                        flexDirection: 'column'
+                                                    }}
+                                                    >
+                                                        <div style={{ display: 'flex', padding: '4px' }}>
+                                                            <EmailIcon fontSize='small' />
+                                                            <Typography
+                                                                variant='body2'
+                                                                style={{ marginLeft: '8px' }}
+                                                            >
+                                                                {api.technicalOwnerEmail}
+                                                            </Typography>
+                                                        </div>
+                                                    </div>
+                                                </Popover>
+                                            )}
+                                        </div>}
+                                </div>
+                            </div>
+                            <hr />
+                        </>
+                    )}
                 </CardContent>
                 <CardActions className={classes.apiActions} data-testid={'card-action-' + api.name + api.version}>
                     <Chip
@@ -339,13 +569,12 @@ class APIThumb extends Component {
                         </>
                     )}
                 </CardActions>
-            </Card>
+            </StyledCard>
         );
     }
 }
 
 APIThumb.propTypes = {
-    classes: PropTypes.shape({}).isRequired,
     api: PropTypes.shape({
         id: PropTypes.string,
         name: PropTypes.string,
@@ -355,4 +584,7 @@ APIThumb.propTypes = {
     updateData: PropTypes.func.isRequired,
 };
 
-export default injectIntl(withStyles(styles, { withTheme: true })(APIThumb));
+export default injectIntl((props) => {
+    const theme = useTheme();
+    return <APIThumb {...props} theme={theme} />;
+});

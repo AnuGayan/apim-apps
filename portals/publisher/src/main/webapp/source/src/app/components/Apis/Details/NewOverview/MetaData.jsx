@@ -16,15 +16,16 @@
  * under the License.
  */
 import React from 'react';
-import Grid from '@material-ui/core/Grid';
+import Grid from '@mui/material/Grid';
 import { FormattedMessage } from 'react-intl';
 import PropTypes from 'prop-types';
 import moment from 'moment';
 import ReactMarkdown from 'react-markdown';
-import Typography from '@material-ui/core/Typography';
-import Box from '@material-ui/core/Box';
-import Tooltip from '@material-ui/core/Tooltip';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Tooltip from '@mui/material/Tooltip';
 import API from 'AppData/api';
+import { useAppContext } from 'AppComponents/Shared/AppContext';
 import { capitalizeFirstLetter } from 'AppData/stringFormatter';
 import { useAPI } from 'AppComponents/Apis/Details/components/ApiContext';
 import BusinessInformation from './BusinessInformation';
@@ -38,6 +39,7 @@ import BusinessInformation from './BusinessInformation';
 function MetaData(props) {
     const { parentClasses } = props;
     const [api] = useAPI();
+    const { settings } = useAppContext();
 
     return (
         <>
@@ -130,6 +132,24 @@ function MetaData(props) {
                             <Grid item xs={12} md={6} lg={8}>
                                 <Typography component='p' variant='body1'>
                                     {api.version && <>{api.version}</>}
+                                </Typography>
+                            </Grid>
+                        </>
+                    )}
+                    {/* Gateway type */}
+                    {settings && settings.gatewayTypes && settings.gatewayTypes.length === 2 && (
+                        <>
+                            <Grid item xs={12} md={6} lg={4}>
+                                <Typography component='p' variant='subtitle2' className={parentClasses.subtitle}>
+                                    <FormattedMessage
+                                        id='Apis.Details.NewOverview.MetaData.gateway.type'
+                                        defaultMessage='Gateway Type'
+                                    />
+                                </Typography>
+                            </Grid>
+                            <Grid item xs={12} md={6} lg={8}>
+                                <Typography component='p' variant='body1'>
+                                    {api.gatewayType === 'wso2/synapse' ? 'Regular' : 'APK'}
                                 </Typography>
                             </Grid>
                         </>
@@ -228,21 +248,22 @@ function MetaData(props) {
                     </Grid>
                     <Grid item xs={12} md={6} lg={8}>
                         <Typography component='p' variant='body1'>
-                            {api.lastUpdatedTime
+                            {api.lastUpdatedTimestamp
                             && (
                                 <>
                                     <Tooltip
-                                        title={moment(api.lastUpdatedTime).calendar()}
+                                        title={moment(parseInt(api.lastUpdatedTimestamp, 10)).calendar()}
                                         interactive
                                         placement='top-start'
                                     >
                                         <Typography variant='body1' display='block'>
-                                            {capitalizeFirstLetter(moment(api.lastUpdatedTime).fromNow())}
+                                            {capitalizeFirstLetter
+                                            (moment(parseInt(api.lastUpdatedTimestamp, 10)).fromNow())}
                                         </Typography>
                                     </Tooltip>
                                 </>
                             )}
-                            {!api.lastUpdatedTime
+                            {!api.lastUpdatedTimestamp
                                 && (
                                     <>
                                         <Typography

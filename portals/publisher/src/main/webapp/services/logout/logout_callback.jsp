@@ -1,5 +1,5 @@
 <%--
-  ~ Copyright (c) 2017, WSO2 LLC (http://www.wso2.org) All Rights Reserved.
+  ~ Copyright (c) 2017-2023, WSO2 LLC (https://www.wso2.com).
   ~
   ~ WSO2 LLC licenses this file to you under the Apache License,
   ~ Version 2.0 (the "License"); you may not use this file except
@@ -68,6 +68,12 @@
 
     cookie = new Cookie("AM_ID_TOKEN_DEFAULT_P1", "");
     cookie.setPath(context + "/services/logout");
+    cookie.setSecure(true);
+    cookie.setMaxAge(2);
+    response.addCookie(cookie);
+
+    cookie = new Cookie("publisher_session_state", "");
+    cookie.setPath(context + "/");
     cookie.setSecure(true);
     cookie.setMaxAge(2);
     response.addCookie(cookie);

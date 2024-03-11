@@ -1,5 +1,5 @@
 <%--
-  ~ Copyright (c) 2017, WSO2 LLC (http://www.wso2.org) All Rights Reserved.
+  ~ Copyright (c) 2017-2023, WSO2 LLC (https://www.wso2.com).
   ~
   ~ WSO2 LLC licenses this file to you under the Apache License,
   ~ Version 2.0 (the "License"); you may not use this file except
@@ -37,7 +37,8 @@
 
 <%@page trimDirectiveWhitespaces="true" %>
 
-<%    Log log = LogFactory.getLog(this.getClass());
+<%
+    Log log = LogFactory.getLog(this.getClass());
     Map settings = Util.readJsonFile("site/public/theme/settings.json", request.getServletContext());
     Map userTheme = Util.readJsonFile("/site/public/theme/userTheme.json", request.getServletContext());
     Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -88,13 +89,13 @@
     String error = request.getParameter("error");
     boolean isAnonymousEnabled = false;
     if ((error != null) && error.equals("login_required")) {
-        if(state!=null){
+        if (state != null) {
             state = URLDecoder.decode(state, "UTF-8");
-            if(state.contains("/apis") == true || state.contains("/home") == true){
+            if (state.contains("/apis") || state.contains("/home")) {
                 isAnonymousEnabled = true;
             }
         }
-        if((state != null) && (isAnonymousEnabled == true)){
+        if ((state != null) && (isAnonymousEnabled == true)) {
             response.sendRedirect(postLogoutRedirectURI + "?referrer=" + state);
         } else {
             response.sendRedirect(postLogoutRedirectURI);
@@ -126,16 +127,29 @@
         String tokenEndpoint = Util.getLoopbackOrigin((String) Util.readJsonObj(settings, "app.origin.host")) + TOKEN_URL_SUFFIX;
         String data = "code=" + request.getParameter("code") + "&grant_type=authorization_code&redirect_uri=" + loginCallbackUrl;
         String codeVerifier = (String) session.getAttribute("code_verifier");
+        boolean isBypassClientCredentials = systemApplicationDAO.isBypassClientCredentials(clientId);
         if (codeVerifier != null) {
             data = data + "&code_verifier=" + codeVerifier;
-        }
+            if (isBypassClientCredentials) {
+                data = data + "&client_id=" + clientId;
+            }
+        }  
         HttpClient client = HttpClient.newHttpClient();
-        HttpRequest post = HttpRequest.newBuilder()
+        HttpRequest post;
+        if (isBypassClientCredentials && codeVerifier != null) {
+            post = HttpRequest.newBuilder()
+                .uri(URI.create(tokenEndpoint))
+                .POST(HttpRequest.BodyPublishers.ofString(data))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .build();
+        } else {
+            post = HttpRequest.newBuilder()
                 .uri(URI.create(tokenEndpoint))
                 .POST(HttpRequest.BodyPublishers.ofString(data))
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .header("Authorization", "Basic " + base64encoded)
                 .build();
+        }
         HttpResponse<String> result = client.send(post, HttpResponse.BodyHandlers.ofString());
         response.setContentType("application/json");
         session.removeAttribute("code_verifier");

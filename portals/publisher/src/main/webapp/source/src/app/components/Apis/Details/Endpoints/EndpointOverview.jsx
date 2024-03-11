@@ -17,21 +17,21 @@
 import React, {
     useEffect, useState, useCallback,
 } from 'react';
+import { styled } from '@mui/material/styles';
 import {
     FormControl,
     Grid,
     Paper,
     Typography,
-    withStyles,
     Radio,
     FormControlLabel,
     Collapse,
     RadioGroup, Checkbox, Dialog, DialogTitle, DialogContent, IconButton, Button, DialogActions, Icon,
-} from '@material-ui/core';
+} from '@mui/material';
 import PropTypes from 'prop-types';
 import { FormattedMessage, injectIntl } from 'react-intl';
 import { isRestricted } from 'AppData/AuthManager';
-import LaunchIcon from '@material-ui/icons/Launch';
+import LaunchIcon from '@mui/icons-material/Launch';
 import { Progress } from 'AppComponents/Shared';
 import CONSTS from 'AppData/Constants';
 
@@ -53,70 +53,108 @@ import EndpointSecurity from './GeneralConfiguration/EndpointSecurity';
 import Credentials from './AWSLambda/Credentials.jsx';
 import ServiceEndpoint from './ServiceEndpoint';
 
-const styles = (theme) => ({
-    listing: {
+const PREFIX = 'EndpointOverview';
+
+const classes = {
+    listing: `${PREFIX}-listing`,
+    endpointContainer: `${PREFIX}-endpointContainer`,
+    endpointName: `${PREFIX}-endpointName`,
+    endpointTypesWrapper: `${PREFIX}-endpointTypesWrapper`,
+    sandboxHeading: `${PREFIX}-sandboxHeading`,
+    radioGroup: `${PREFIX}-radioGroup`,
+    endpointsWrapperLeft: `${PREFIX}-endpointsWrapperLeft`,
+    endpointsWrapperRight: `${PREFIX}-endpointsWrapperRight`,
+    endpointsTypeSelectWrapper: `${PREFIX}-endpointsTypeSelectWrapper`,
+    endpointTypesSelectWrapper: `${PREFIX}-endpointTypesSelectWrapper`,
+    defaultEndpointWrapper: `${PREFIX}-defaultEndpointWrapper`,
+    configDialogHeader: `${PREFIX}-configDialogHeader`,
+    addLabel: `${PREFIX}-addLabel`,
+    buttonIcon: `${PREFIX}-buttonIcon`,
+    button: `${PREFIX}-button`
+};
+
+const Root = styled('div')((
+    {
+        theme
+    }
+) => ({
+    [`& .${classes.listing}`]: {
         margin: theme.spacing(1),
         padding: theme.spacing(1),
     },
-    endpointContainer: {
+
+    [`& .${classes.endpointContainer}`]: {
         paddingLeft: theme.spacing(2),
         padding: theme.spacing(1),
     },
-    endpointName: {
+
+    [`& .${classes.endpointName}`]: {
         paddingLeft: theme.spacing(1),
         fontSize: '1rem',
         paddingTop: theme.spacing(1),
         paddingBottom: theme.spacing(1),
     },
-    endpointTypesWrapper: {
+
+    [`& .${classes.endpointTypesWrapper}`]: {
         padding: theme.spacing(3),
         marginTop: theme.spacing(2),
     },
-    sandboxHeading: {
+
+    [`& .${classes.sandboxHeading}`]: {
         display: 'flex',
         alignItems: 'center',
     },
-    radioGroup: {
+
+    [`& .${classes.radioGroup}`]: {
         display: 'flex',
         flexDirection: 'row',
     },
-    endpointsWrapperLeft: {
+
+    [`& .${classes.endpointsWrapperLeft}`]: {
         padding: theme.spacing(1),
         borderRight: '#c4c4c4',
         borderRightStyle: 'solid',
         borderRightWidth: 'thin',
     },
-    endpointsWrapperRight: {
+
+    [`& .${classes.endpointsWrapperRight}`]: {
         padding: theme.spacing(1),
     },
-    endpointsTypeSelectWrapper: {
+
+    [`& .${classes.endpointsTypeSelectWrapper}`]: {
         marginLeft: theme.spacing(2),
         marginRight: theme.spacing(2),
         padding: theme.spacing(1),
         display: 'flex',
         justifyContent: 'space-between',
     },
-    endpointTypesSelectWrapper: {
+
+    [`& .${classes.endpointTypesSelectWrapper}`]: {
         display: 'flex',
     },
-    defaultEndpointWrapper: {
+
+    [`& .${classes.defaultEndpointWrapper}`]: {
         paddingLeft: theme.spacing(1),
         paddingRight: theme.spacing(1),
         marginRight: theme.spacing(1),
     },
-    configDialogHeader: {
+
+    [`& .${classes.configDialogHeader}`]: {
         fontWeight: '600',
     },
-    addLabel: {
+
+    [`& .${classes.addLabel}`]: {
         padding: theme.spacing(2),
     },
-    buttonIcon: {
+
+    [`& .${classes.buttonIcon}`]: {
         marginRight: theme.spacing(1),
     },
-    button: {
+
+    [`& .${classes.button}`]: {
         textTransform: 'none',
-    },
-});
+    }
+}));
 
 const endpointTypes = [
     { key: 'http', value: 'HTTP/REST Endpoint' },
@@ -136,7 +174,6 @@ const endpointTypes = [
  */
 function EndpointOverview(props) {
     const {
-        classes,
         api,
         endpointsDispatcher,
         swaggerDef,
@@ -230,7 +267,7 @@ function EndpointOverview(props) {
     const getSupportedType = (apiObject) => {
         const { type } = apiObject;
         let supportedEndpointTypes = [];
-        if (type === 'GRAPHQL') {
+        if (type === 'GRAPHQL' && apiObject.gatewayType !== 'wso2/apk') {
             supportedEndpointTypes = [
                 { key: 'http', value: 'HTTP/REST Endpoint' },
                 { key: 'service', value: 'Service Endpoint' },
@@ -245,6 +282,10 @@ function EndpointOverview(props) {
             supportedEndpointTypes = [
                 { key: 'http', value: 'HTTP/REST Endpoint' },
                 { key: 'service', value: 'Service Endpoint' },
+            ];
+        } else if (apiObject.gatewayType === 'wso2/apk') {
+            supportedEndpointTypes = [
+                { key: 'http', value: 'HTTP/REST Endpoint' },
             ];
         } else {
             supportedEndpointTypes = [
@@ -673,7 +714,7 @@ function EndpointOverview(props) {
     }
 
     return (
-        <div className={classes.overviewWrapper}>
+        <Root className={classes.overviewWrapper}>
             <Grid container spacing={2}>
                 <Grid item xs={12}>
                     {api.type === 'WS' ? <div /> : (
@@ -890,8 +931,9 @@ function EndpointOverview(props) {
                                                                                         + ' which sets the endpoints.'
                                                                                     }
                                                                                 />
-                                                                                <IconButton
-                                                                                    onClick={saveAndRedirect}
+                                                                                <IconButton 
+                                                                                    onClick={saveAndRedirect} 
+                                                                                    size='large'
                                                                                 >
                                                                                     <LaunchIcon
                                                                                         style={{ marginLeft: '2px' }}
@@ -1058,7 +1100,7 @@ function EndpointOverview(props) {
                                                                                                 onClick={
                                                                                                     saveAndRedirect
                                                                                                 }
-                                                                                            >
+                                                                                                size='large'>
                                                                                                 <LaunchIcon
                                                                                                     style={{
                                                                                                         marginLeft:
@@ -1168,6 +1210,7 @@ function EndpointOverview(props) {
                         || api.type === 'WS'
                         || endpointType.key === 'awslambda'
                         || endpointType.key === 'service'
+                        || api.gatewayType === 'wso2/apk'
                         ? <div />
                         : (
                             <Grid item xs={12}>
@@ -1198,24 +1241,26 @@ function EndpointOverview(props) {
                         )
                 }
             </Grid>
-            <Dialog open={advanceConfigOptions.open}>
-                <DialogTitle>
-                    <Typography className={classes.configDialogHeader}>
-                        <FormattedMessage
-                            id='Apis.Details.Endpoints.EndpointOverview.advance.endpoint.configuration'
-                            defaultMessage='Advanced Configurations'
+            {api.gatewayType !== 'wso2/apk' && (
+                <Dialog open={advanceConfigOptions.open}>
+                    <DialogTitle>
+                        <Typography className={classes.configDialogHeader}>
+                            <FormattedMessage
+                                id='Apis.Details.Endpoints.EndpointOverview.advance.endpoint.configuration'
+                                defaultMessage='Advanced Configurations'
+                            />
+                        </Typography>
+                    </DialogTitle>
+                    <DialogContent>
+                        <AdvanceEndpointConfig
+                            isSOAPEndpoint={endpointType.key === 'address'}
+                            advanceConfig={advanceConfigOptions.config}
+                            onSaveAdvanceConfig={saveAdvanceConfig}
+                            onCancel={closeAdvanceConfig}
                         />
-                    </Typography>
-                </DialogTitle>
-                <DialogContent>
-                    <AdvanceEndpointConfig
-                        isSOAPEndpoint={endpointType.key === 'address'}
-                        advanceConfig={advanceConfigOptions.config}
-                        onSaveAdvanceConfig={saveAdvanceConfig}
-                        onCancel={closeAdvanceConfig}
-                    />
-                </DialogContent>
-            </Dialog>
+                    </DialogContent>
+                </Dialog>
+            )}
             <Dialog open={endpointSecurityConfig.open}>
                 <DialogTitle>
                     <Typography className={classes.configDialogHeader}>
@@ -1287,7 +1332,7 @@ function EndpointOverview(props) {
                     </Button>
                 </DialogActions>
             </Dialog>
-        </div>
+        </Root>
     );
 }
 
@@ -1304,4 +1349,4 @@ EndpointOverview.propTypes = {
     saveAndRedirect: PropTypes.func.isRequired,
 };
 
-export default injectIntl(withStyles(styles)(EndpointOverview));
+export default injectIntl((EndpointOverview));

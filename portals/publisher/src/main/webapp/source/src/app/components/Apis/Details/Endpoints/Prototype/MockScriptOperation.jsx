@@ -17,23 +17,34 @@
  */
 
 import React, {
-    useCallback,
     lazy,
     Suspense,
     useContext,
     useState,
 } from 'react';
-import {
-    Grid,
-    Typography,
-    makeStyles,
-    Button,
-} from '@material-ui/core';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import { styled } from '@mui/material/styles';
+import { Grid, Typography, Button } from '@mui/material';
+import CircularProgress from '@mui/material/CircularProgress';
 import PropTypes from 'prop-types';
 import { FormattedMessage } from 'react-intl';
 import { isRestricted } from 'AppData/AuthManager';
 import { APIContext } from 'AppComponents/Apis/Details/components/ApiContext';
+
+const PREFIX = 'MockScriptOperation';
+
+const classes = {
+    scriptResetButton: `${PREFIX}-scriptResetButton`
+};
+
+const StyledGrid = styled(Grid)(() => {
+    return {
+        [`& .${classes.scriptResetButton}`]: {
+            display: 'flex',
+            justifyContent: 'space-between',
+            marginBottom: '10px',
+        },
+    };
+});
 
 const MonacoEditor = lazy(() => import('react-monaco-editor' /* webpackChunkName: "GenResourceMonaco" */));
 
@@ -41,16 +52,6 @@ const xMediationScriptProperty = 'x-mediation-script';
 const defaultScript = '/* mc.setProperty(\'CONTENT_TYPE\', \'application/json\');\n\t'
     + 'mc.setPayloadJSON(\'{ "data" : "sample JSON"}\');*/\n'
     + '/*Uncomment the above comment block to send a sample response.*/';
-
-const useStyles = makeStyles(() => {
-    return {
-        scriptResetButton: {
-            display: 'flex',
-            justifyContent: 'space-between',
-            marginBottom: '10px',
-        },
-    };
-});
 
 /**
  * Retrieve mock script for the method of the resource.
@@ -82,8 +83,7 @@ function MockScriptOperation(props) {
     } = props;
     const { api } = useContext(APIContext);
     const [showReset, setShowReset] = useState(false);
-    const [mockValueDetails, setMockValueDetails] = useState({ resourcePath: '', resourceMethod: '' });
-    const classes = useStyles();
+
 
     /**
      * Handles the onChange event of the script editor.
@@ -92,21 +92,18 @@ function MockScriptOperation(props) {
      * @param {string} path The path value of the resource.
      * @param {string} method The resource method.
      * */
-    const onScriptChange = useCallback(
-        (value, path, method) => {
-            const tmpPaths = JSON.parse(JSON.stringify(paths));
-            tmpPaths[path][method][xMediationScriptProperty] = value;
-            updatePaths(tmpPaths);
-        },
-        [mockValueDetails.resourcePath, mockValueDetails.resourceMethod],
-    );
+    const onScriptChange = (value, path, method) => {
+        const tmpPaths = JSON.parse(JSON.stringify(paths));
+        tmpPaths[path][method][xMediationScriptProperty] = value;
+        updatePaths(tmpPaths);
+    };
 
     const mediationScript = operation[xMediationScriptProperty];
     const script = mediationScript === undefined ? defaultScript : mediationScript;
     const originalScript = getGeneratedMockScriptOfAPI(mockScripts, resourcePath, resourceMethod);
 
     return (
-        <Grid container direction='column'>
+        <StyledGrid container direction='column'>
             <Grid item className={classes.scriptResetButton}>
                 <Typography variant='subtitle2'>
                     <FormattedMessage
@@ -121,7 +118,6 @@ function MockScriptOperation(props) {
                             color='primary'
                             onClick={() => {
                                 setShowReset(false);
-                                setMockValueDetails({ resourcePath, resourceMethod });
                                 onScriptChange(originalScript, resourcePath, resourceMethod);
                             }}
                         >
@@ -146,13 +142,12 @@ function MockScriptOperation(props) {
                         language='javascript'
                         onChange={(content) => {
                             setShowReset(true);
-                            setMockValueDetails({ resourcePath, resourceMethod });
                             onScriptChange(content, resourcePath, resourceMethod);
                         }}
                     />
                 </Suspense>
             </Grid>
-        </Grid>
+        </StyledGrid>
     );
 }
 

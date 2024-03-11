@@ -17,21 +17,26 @@
  */
 
 import React from 'react';
+import { styled } from '@mui/material/styles';
 import { FormattedMessage } from 'react-intl';
-import Grid from '@material-ui/core/Grid';
-import Typography from '@material-ui/core/Typography';
+import Grid from '@mui/material/Grid';
+import Typography from '@mui/material/Typography';
 import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
-import Icon from '@material-ui/core/Icon';
+import Icon from '@mui/material/Icon';
 import AuthManager from 'AppData/AuthManager';
-import Paper from '@material-ui/core/Paper';
-import Button from '@material-ui/core/Button';
+import Paper from '@mui/material/Paper';
+import Button from '@mui/material/Button';
 import postmanIcon from '@iconify/icons-simple-icons/postman';
-import openapiinitiativeIcon from '@iconify/icons-simple-icons/openapiinitiative';
 import { Icon as Icons } from '@iconify/react';
 import fileDownload from 'js-file-download';
 import openapiToPostman from 'openapi-to-postmanv2';
 import swaggerToPostman from 'swagger2-postman2-converter';
+import FileCopyIcon from '@mui/icons-material/FileCopy';
+import Tooltip from '@mui/material/Tooltip';
+import CloudDownloadRounded from '@mui/icons-material/CloudDownloadRounded';
+import queryString from 'query-string';
+import Settings from 'Settings';
+import Utils from 'AppData/Utils';
 import { ApiContext } from '../ApiContext';
 import Progress from '../../../Shared/Progress';
 import Api from '../../../../data/api';
@@ -39,41 +44,60 @@ import SwaggerUI from './SwaggerUI';
 import TryOutController from './TryOutController';
 import Application from '../../../../data/Application';
 
-/**
- * @inheritdoc
- * @param {*} theme theme
- */
-const styles = (theme) => ({
-    iconify: {
+const PREFIX = 'ApiConsole';
+
+const classes = {
+    iconify: `${PREFIX}-iconify`,
+    buttonIcon: `${PREFIX}-buttonIcon`,
+    paper: `${PREFIX}-paper`,
+    grid: `${PREFIX}-grid`,
+    userNotificationPaper: `${PREFIX}-userNotificationPaper`,
+    titleSub: `${PREFIX}-titleSub`,
+    swaggerUIPaper: `${PREFIX}-swaggerUIPaper`,
+};
+
+// TODO jss-to-styled codemod: The Fragment root was replaced by div. Change the tag if needed.
+const Root = styled('div')((
+    {
+        theme,
+    },
+) => ({
+    [`& .${classes.iconify}`]: {
         marginRight: 10,
         font: 24,
     },
-    buttonIcon: {
+
+    [`& .${classes.buttonIcon}`]: {
         marginRight: 10,
     },
-    paper: {
+
+    [`& .${classes.paper}`]: {
         margin: theme.spacing(1),
         padding: theme.spacing(1),
     },
-    grid: {
+
+    [`& .${classes.grid}`]: {
         marginTop: theme.spacing(4),
         marginBottom: theme.spacing(4),
         paddingRight: theme.spacing(2),
         justifyContent: 'center',
     },
-    userNotificationPaper: {
+
+    [`& .${classes.userNotificationPaper}`]: {
         padding: theme.spacing(2),
     },
-    titleSub: {
+
+    [`& .${classes.titleSub}`]: {
         marginLeft: theme.spacing(2),
         paddingTop: theme.spacing(2),
         paddingBottom: theme.spacing(2),
         color: theme.palette.getContrastText(theme.palette.background.default),
     },
-    swaggerUIPaper: {
+
+    [`& .${classes.swaggerUIPaper}`]: {
         backgroundColor: theme.custom.apiDetailPages.swaggerUIBackground,
     },
-});
+}));
 
 /**
  *
@@ -99,6 +123,10 @@ class ApiConsole extends React.Component {
             productionApiKey: '',
             sandboxApiKey: '',
             selectedKeyManager: 'Resident Key Manager',
+            urlCopied: false,
+            accessTokenPart: Utils.getCookieWithoutEnvironment('WSO2_AM_TOKEN_1_Default'),
+            tenant: '',
+            selectedAttribute: null,
             advAuthHeader: 'Authorization',
             advAuthHeaderValue: '',
             selectedEndpoint: 'PRODUCTION',
@@ -121,6 +149,7 @@ class ApiConsole extends React.Component {
         this.setAdvAuthHeader = this.setAdvAuthHeader.bind(this);
         this.setAdvAuthHeaderValue = this.setAdvAuthHeaderValue.bind(this);
         this.setSelectedEndpoint = this.setSelectedEndpoint.bind(this);
+        this.onCopy = this.onCopy.bind(this);
     }
 
     /**
@@ -136,9 +165,23 @@ class ApiConsole extends React.Component {
         let swagger;
         let productionAccessToken;
         let sandboxAccessToken;
-
+        const { app: { customUrl: { tenantDomain: customUrlEnabledDomain } } } = Settings;
+        let tenantDomain = '';
+        if (customUrlEnabledDomain !== 'null') {
+            tenantDomain = customUrlEnabledDomain;
+        } else {
+            const { location } = window;
+            if (location) {
+                const { tenant } = queryString.parse(location.search);
+                if (tenant) {
+                    tenantDomain = tenant;
+                }
+            }
+        }
+        this.setState({ tenant: tenantDomain });
         this.apiClient = new Api();
         const promiseAPI = this.apiClient.getAPIById(apiID);
+        let selectedAttribute = null;
 
         promiseAPI
             .then((apiResponse) => {
@@ -154,8 +197,10 @@ class ApiConsole extends React.Component {
                 }
                 if (environments && environments.length > 0) {
                     selectedEnvironment = environments[0].name;
+                    selectedAttribute = 'environmentName';
                     return this.apiClient.getSwaggerByAPIIdAndEnvironment(apiID, selectedEnvironment);
                 } else {
+                    selectedAttribute = '';
                     return this.apiClient.getSwaggerByAPIId(apiID);
                 }
             })
@@ -175,6 +220,7 @@ class ApiConsole extends React.Component {
                     sandboxAccessToken,
                     selectedEnvironment,
                     securitySchemeType: defaultSecurityScheme,
+                    selectedAttribute,
                 });
                 if (user != null) {
                     return this.apiClient.getSubscriptions(apiID);
@@ -443,17 +489,28 @@ class ApiConsole extends React.Component {
         });
     }
 
+    onCopy = () => {
+        this.setState({
+            urlCopied: true,
+        });
+        const caller = function () {
+            this.setState({ urlCopied: false });
+        };
+        setTimeout(caller, 2000);
+    }
+
     /**
      * @inheritdoc
      * @memberof ApiConsole
      */
     render() {
-        const { classes } = this.props;
         const {
             api, notFound, swagger, securitySchemeType, selectedEnvironment, environments, scopes,
-            username, password, productionAccessToken, sandboxAccessToken, selectedKeyType,
+            username, password, productionAccessToken, sandboxAccessToken, selectedKeyType, accessTokenPart,
             sandboxApiKey, productionApiKey, selectedKeyManager, advAuthHeader, advAuthHeaderValue, selectedEndpoint,
+            urlCopied, tenant, selectedAttribute,
         } = this.state;
+        const { location } = window;
         const user = AuthManager.getUser();
         const downloadSwagger = JSON.stringify({ ...swagger });
         const downloadLink = 'data:text/json;charset=utf-8, ' + encodeURIComponent(downloadSwagger);
@@ -470,7 +527,7 @@ class ApiConsole extends React.Component {
         if (api && api.securityScheme) {
             isApiKeyEnabled = api.securityScheme.includes('api_key');
             if (isApiKeyEnabled && securitySchemeType === 'API-KEY') {
-                authorizationHeader = 'apikey';
+                authorizationHeader = api.apiKeyHeader ? api.apiKeyHeader : 'ApiKey';
             }
         }
         let swaggerSpec = swagger;
@@ -499,7 +556,7 @@ class ApiConsole extends React.Component {
             }
         }
         return (
-            <>
+            <Root>
                 <Paper className={classes.paper}>
                     <Grid container className={classes.grid}>
                         {!user && (!api.advertiseInfo || !api.advertiseInfo.advertised) && (
@@ -522,48 +579,49 @@ class ApiConsole extends React.Component {
                             </Grid>
                         )}
                     </Grid>
-
-                    <TryOutController
-                        setSecurityScheme={this.setSecurityScheme}
-                        securitySchemeType={securitySchemeType}
-                        setSelectedEnvironment={this.setSelectedEnvironment}
-                        selectedEnvironment={selectedEnvironment}
-                        productionAccessToken={productionAccessToken}
-                        setProductionAccessToken={this.setProductionAccessToken}
-                        sandboxAccessToken={sandboxAccessToken}
-                        setSandboxAccessToken={this.setSandboxAccessToken}
-                        swagger={swaggerSpec}
-                        environments={environments}
-                        scopes={scopes}
-                        setUsername={this.setUsername}
-                        setPassword={this.setPassword}
-                        username={username}
-                        password={password}
-                        setSelectedKeyType={this.setSelectedKeyType}
-                        selectedKeyType={selectedKeyType}
-                        setSelectedKeyManager={this.setSelectedKeyManager}
-                        selectedKeyManager={selectedKeyManager}
-                        updateSwagger={this.updateSwagger}
-                        setKeys={this.setKeys}
-                        setProductionApiKey={this.setProductionApiKey}
-                        setSandboxApiKey={this.setSandboxApiKey}
-                        productionApiKey={productionApiKey}
-                        sandboxApiKey={sandboxApiKey}
-                        setAdvAuthHeader={this.setAdvAuthHeader}
-                        setAdvAuthHeaderValue={this.setAdvAuthHeaderValue}
-                        advAuthHeader={advAuthHeader}
-                        advAuthHeaderValue={advAuthHeaderValue}
-                        setSelectedEndpoint={this.setSelectedEndpoint}
-                        selectedEndpoint={selectedEndpoint}
-                        api={this.state.api}
-                        URLs={null}
-                    />
+                    <Grid container className={classes.grid}>
+                        <TryOutController
+                            setSecurityScheme={this.setSecurityScheme}
+                            securitySchemeType={securitySchemeType}
+                            setSelectedEnvironment={this.setSelectedEnvironment}
+                            selectedEnvironment={selectedEnvironment}
+                            productionAccessToken={productionAccessToken}
+                            setProductionAccessToken={this.setProductionAccessToken}
+                            sandboxAccessToken={sandboxAccessToken}
+                            setSandboxAccessToken={this.setSandboxAccessToken}
+                            swagger={swaggerSpec}
+                            environments={environments}
+                            scopes={scopes}
+                            setUsername={this.setUsername}
+                            setPassword={this.setPassword}
+                            username={username}
+                            password={password}
+                            setSelectedKeyType={this.setSelectedKeyType}
+                            selectedKeyType={selectedKeyType}
+                            setSelectedKeyManager={this.setSelectedKeyManager}
+                            selectedKeyManager={selectedKeyManager}
+                            updateSwagger={this.updateSwagger}
+                            setKeys={this.setKeys}
+                            setProductionApiKey={this.setProductionApiKey}
+                            setSandboxApiKey={this.setSandboxApiKey}
+                            productionApiKey={productionApiKey}
+                            sandboxApiKey={sandboxApiKey}
+                            setAdvAuthHeader={this.setAdvAuthHeader}
+                            setAdvAuthHeaderValue={this.setAdvAuthHeaderValue}
+                            advAuthHeader={advAuthHeader}
+                            advAuthHeaderValue={advAuthHeaderValue}
+                            setSelectedEndpoint={this.setSelectedEndpoint}
+                            selectedEndpoint={selectedEndpoint}
+                            api={this.state.api}
+                            URLs={null}
+                        />
+                    </Grid>
 
                     {api.type !== 'SOAP' && (
                         <Grid container>
-                            <Grid xs={8} item />
+                            <Grid xs={7} item />
                             <Grid xs={2} item>
-                                <Button size='small' onClick={() => this.convertToPostman(downloadSwagger)}>
+                                <Button size='small' color='grey' onClick={() => this.convertToPostman(downloadSwagger)}>
                                     <Icons icon={postmanIcon} width={30} height={30} className={classes.buttonIcon} />
                                     <FormattedMessage
                                         id='Apis.Details.APIConsole.APIConsole.download.postman'
@@ -571,16 +629,46 @@ class ApiConsole extends React.Component {
                                     />
                                 </Button>
                             </Grid>
-                            <Grid xs={2} item>
+                            <Grid xs={3} item>
                                 <a href={downloadLink} download={fileName}>
-                                    <Button size='small'>
-                                        <Icons icon={openapiinitiativeIcon} width={30} height={30} className={classes.buttonIcon} />
+                                    <Button size='small' color='grey'>
+                                        <CloudDownloadRounded className={classes.buttonIcon} />
                                         <FormattedMessage
                                             id='Apis.Details.APIConsole.APIConsole.download.swagger'
-                                            defaultMessage='OpenAPI'
+                                            defaultMessage='Swagger ( /swagger.json )'
                                         />
                                     </Button>
                                 </a>
+                                <Tooltip
+                                    title={urlCopied
+                                        ? (
+                                            <FormattedMessage
+                                                id='Apis.Details.Swagger.URL.copied'
+                                                defaultMessage='Copied'
+                                            />
+                                        )
+                                        : (
+                                            <FormattedMessage
+                                                id='Apis.Details.Swagger.URL.copy.to.clipboard'
+                                                defaultMessage='Copy to clipboard'
+                                            />
+                                        )}
+                                    placement='top'
+                                >
+                                    <Button
+                                        aria-label='Copy to clipboard'
+                                        className={classes.button}
+                                        color='grey'
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(location.origin
+                                                + '/api/am/devportal/v3/apis/' + api.id + '/swagger?accessToken='
+                                                + accessTokenPart + '&X-WSO2-Tenant-Q=' + tenant + '&'
+                                                + selectedAttribute + '=' + selectedEnvironment).then(this.onCopy());
+                                        }}
+                                    >
+                                        <FileCopyIcon className={classes.buttonIcon} />
+                                    </Button>
+                                </Tooltip>
                             </Grid>
                         </Grid>
                     )}
@@ -594,7 +682,7 @@ class ApiConsole extends React.Component {
                         securitySchemeType={securitySchemeType}
                     />
                 </Paper>
-            </>
+            </Root>
         );
     }
 }
@@ -612,4 +700,4 @@ ApiConsole.propTypes = {
 
 ApiConsole.contextType = ApiContext;
 
-export default withStyles(styles)(ApiConsole);
+export default (ApiConsole);

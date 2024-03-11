@@ -18,20 +18,20 @@
 import React, { useReducer, useState, useEffect } from 'react';
 import API from 'AppData/api';
 import PropTypes from 'prop-types';
-import Typography from '@material-ui/core/Typography';
-import Box from '@material-ui/core/Box';
-import Grid from '@material-ui/core/Grid';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
 import { FormattedMessage, useIntl } from 'react-intl';
-import Stepper from '@material-ui/core/Stepper';
-import Step from '@material-ui/core/Step';
-import StepLabel from '@material-ui/core/StepLabel';
-import Button from '@material-ui/core/Button';
+import Stepper from '@mui/material/Stepper';
+import Step from '@mui/material/Step';
+import StepLabel from '@mui/material/StepLabel';
+import Button from '@mui/material/Button';
 import { Link } from 'react-router-dom';
 import Wsdl from 'AppData/Wsdl';
 import Alert from 'AppComponents/Shared/Alert';
-import { Link as MUILink } from '@material-ui/core';
-import { Alert as MUIAlert, AlertTitle } from '@material-ui/lab';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import { Link as MUILink } from '@mui/material';
+import { Alert as MUIAlert, AlertTitle } from '@mui/lab';
+import CircularProgress from '@mui/material/CircularProgress';
 import DefaultAPIForm from 'AppComponents/Apis/Create/Components/DefaultAPIForm';
 import APICreateBase from 'AppComponents/Apis/Create/Components/APICreateBase';
 
@@ -174,28 +174,26 @@ export default function ApiCreateWSDL(props) {
         <APICreateBase
             title={(
                 <>
-                    <Box mb={2}>
-                        <MUIAlert severity='warning'>
-                            <AlertTitle>
-                                <FormattedMessage
-                                    id='Apis.Create.WSDL.ApiCreateWSDL.deprecated.msg'
-                                    defaultMessage='This feature is deprecated. 
-                                    Please use the WSO2 Integration Studio as an alternative'
-                                />
-                            </AlertTitle>
-                            <FormattedMessage
-                                id='Apis.Create.WSDL.ApiCreateWSDL.deprecated.msg.info.link.msg'
-                                defaultMessage='Integration Studio Documentation: '
-                            />
-                            <MUILink
-                                // eslint-disable-next-line
-                                href={`https://apim.docs.wso2.com/en/4.2.0/integrate/develop/creating-artifacts/creating-an-api/`}
-                                target='_blank'>
-                                https://apim.docs.wso2.com/en/4.2.0/integrate/develop/
-                                creating-artifacts/creating-an-api/
-                            </MUILink>
-                        </MUIAlert>
-                    </Box>
+                    {wizardStep === 1 && apiInputs.type === "SOAPTOREST" && (
+                        <Box mb={2}>
+                            <MUIAlert severity='warning'>
+                                <AlertTitle>
+                                    <FormattedMessage
+                                        id='Apis.Create.WSDL.ApiCreateWSDL.deprecated.msg'
+                                        defaultMessage='APIM supports only a limited set of capabilities with
+                                        this feature. If you want to process complex WSDL/XML schema,
+                                        please refer to the following documentation.'
+                                    />
+                                </AlertTitle>
+                                <MUILink
+                                    // eslint-disable-next-line
+                                    href={`https://apim.docs.wso2.com/en/4.2.0/integrate/develop/creating-artifacts/creating-an-api/`}
+                                    target='_blank'>
+                                    WSO2 Integration Studio Documentation
+                                </MUILink>
+                            </MUIAlert>
+                        </Box>
+                    )}
                     <Typography variant='h5'>
                         <FormattedMessage
                             id='Apis.Create.WSDL.ApiCreateWSDL.heading'
@@ -214,7 +212,7 @@ export default function ApiCreateWSDL(props) {
                 </>
             )}
         >
-            <Box>
+            <Box sx={{ mb: 2 }}>
                 <Stepper alternativeLabel activeStep={wizardStep}>
                     <Step>
                         <StepLabel>Provide WSDL</StepLabel>
@@ -226,10 +224,8 @@ export default function ApiCreateWSDL(props) {
                 </Stepper>
             </Box>
 
-            <Grid container spacing={3}>
-                <Grid item md={12} />
-                <Grid item md={1} />
-                <Grid item md={11}>
+            <Grid container spacing={2}>
+                <Grid item md={12}>
                     {wizardStep === 0 && (
                         <ProvideWSDL
                             onValidate={handleOnValidate}
@@ -246,9 +242,8 @@ export default function ApiCreateWSDL(props) {
                         />
                     )}
                 </Grid>
-                <Grid item md={1} />
-                <Grid item md={9}>
-                    <Grid container direction='row' justify='flex-start' alignItems='center' spacing={2}>
+                <Grid item md={12}>
+                    <Grid container direction='row' justifyContent='flex-start' alignItems='center' spacing={2}>
                         <Grid item>
                             {wizardStep === 0 && (
                                 <Link to='/apis/'>

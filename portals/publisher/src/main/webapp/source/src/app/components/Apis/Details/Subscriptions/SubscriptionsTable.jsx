@@ -17,52 +17,90 @@
  */
 
 import React, { Component } from 'react';
+import { styled } from '@mui/material/styles';
 import { FormattedMessage, injectIntl, defineMessages } from 'react-intl';
-import IconButton from '@material-ui/core/IconButton';
-import Button from '@material-ui/core/Button';
-import Box from '@material-ui/core/Box';
-import FirstPageIcon from '@material-ui/icons/FirstPage';
-import KeyboardArrowLeft from '@material-ui/icons/KeyboardArrowLeft';
-import KeyboardArrowRight from '@material-ui/icons/KeyboardArrowRight';
-import LastPageIcon from '@material-ui/icons/LastPage';
-import Paper from '@material-ui/core/Paper';
-import CircularProgress from '@material-ui/core/CircularProgress';
-import Grid from '@material-ui/core/Grid';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableRow from '@material-ui/core/TableRow';
-import TablePagination from '@material-ui/core/TablePagination';
-import Tooltip from '@material-ui/core/Tooltip';
-import withStyles from '@material-ui/core/styles/withStyles';
-import Typography from '@material-ui/core/Typography';
+import IconButton from '@mui/material/IconButton';
+import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
+import FirstPageIcon from '@mui/icons-material/FirstPage';
+import KeyboardArrowLeft from '@mui/icons-material/KeyboardArrowLeft';
+import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
+import LastPageIcon from '@mui/icons-material/LastPage';
+import Paper from '@mui/material/Paper';
+import CircularProgress from '@mui/material/CircularProgress';
+import Grid from '@mui/material/Grid';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableRow from '@mui/material/TableRow';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
 import PropTypes from 'prop-types';
 import MUIDataTable from 'mui-datatables';
-import InfoIcon from '@material-ui/icons/Info';
-import UserIcon from '@material-ui/icons/Person';
+import Configurations from 'Config';
+import InfoIcon from '@mui/icons-material/Info';
+import UserIcon from '@mui/icons-material/Person';
 
 
 import Alert from 'AppComponents/Shared/Alert';
 import API from 'AppData/api';
 import { ScopeValidation, resourceMethod, resourcePath } from 'AppData/ScopeValidation';
 import AuthManager from 'AppData/AuthManager';
+import { Autocomplete } from '@mui/lab';
+import { TextField } from '@mui/material';
 import Invoice from './Invoice';
 
-const styles = (theme) => ({
-    heading: {
+const PREFIX = 'SubscriptionsTable';
+
+const classes = {
+    heading: `${PREFIX}-heading`,
+    button: `${PREFIX}-button`,
+    headline: `${PREFIX}-headline`,
+    popupHeadline: `${PREFIX}-popupHeadline`,
+    table: `${PREFIX}-table`,
+    searchDiv: `${PREFIX}-searchDiv`,
+    searchRoot: `${PREFIX}-searchRoot`,
+    searchInput: `${PREFIX}-searchInput`,
+    searchIconButton: `${PREFIX}-searchIconButton`,
+    noDataMessage: `${PREFIX}-noDataMessage`,
+    tableColumnSize: `${PREFIX}-tableColumnSize`,
+    tableColumnSize2: `${PREFIX}-tableColumnSize2`,
+    dialogColumnSize: `${PREFIX}-dialogColumnSize`,
+    dialog: `${PREFIX}-dialog`,
+    invoiceTable: `${PREFIX}-invoiceTable`,
+    uniqueCell: `${PREFIX}-uniqueCell`,
+    mainTitle: `${PREFIX}-mainTitle`,
+    titleWrapper: `${PREFIX}-titleWrapper`,
+    typography: `${PREFIX}-typography`,
+    root: `${PREFIX}-root`,
+    InfoToolTip: `${PREFIX}-InfoToolTip`,
+    subscriberHeader: `${PREFIX}-subscriberHeader`
+};
+
+
+const Root = styled('div')((
+    {
+        theme
+    }
+) => ({
+    [`& .${classes.heading}`]: {
         marginTop: theme.spacing(3),
         marginBottom: theme.spacing(2),
     },
-    button: {
+
+    [`& .${classes.button}`]: {
         margin: theme.spacing(1),
     },
-    headline: { paddingTop: theme.spacing(1.25), paddingLeft: theme.spacing(2.5) },
-    popupHeadline: {
+
+    [`& .${classes.headline}`]: { paddingTop: theme.spacing(1.25), paddingLeft: theme.spacing(2.5) },
+
+    [`& .${classes.popupHeadline}`]: {
         alignItems: 'center',
         borderBottom: '2px solid #40E0D0',
         textAlign: 'center',
     },
-    table: {
+
+    [`& .${classes.table}`]: {
         '& td': {
             fontSize: theme.typography.fontSize,
         },
@@ -70,12 +108,14 @@ const styles = (theme) => ({
             fontSize: theme.typography.fontSize * 1.2,
         },
     },
-    searchDiv: {
+
+    [`& .${classes.searchDiv}`]: {
         float: 'right',
         paddingTop: theme.spacing(1.25),
         paddingRight: theme.spacing(1.25),
     },
-    searchRoot: {
+
+    [`& .${classes.searchRoot}`]: {
         paddingTop: theme.spacing(0.25),
         paddingBottom: theme.spacing(0.25),
         paddingRight: theme.spacing(0.5),
@@ -85,56 +125,71 @@ const styles = (theme) => ({
         width: theme.spacing(50),
         borderBottom: '1px solid #E8E8E8',
     },
-    searchInput: {
+
+    [`& .${classes.searchInput}`]: {
         marginLeft: theme.spacing(1),
         flex: 1,
     },
-    searchIconButton: {
+
+    [`& .${classes.searchIconButton}`]: {
         padding: theme.spacing(1.25),
     },
-    noDataMessage: {
+
+    [`& .${classes.noDataMessage}`]: {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         color: '#888888',
         width: '100%',
+        fontFamily: theme.typography.fontFamily,
     },
-    tableColumnSize: {
+
+    [`& .${classes.tableColumnSize}`]: {
         width: '14%',
     },
-    tableColumnSize2: {
+
+    [`& .${classes.tableColumnSize2}`]: {
         width: '30%',
     },
-    dialogColumnSize: {
+
+    [`& .${classes.dialogColumnSize}`]: {
         width: '50%',
     },
-    dialog: {
+
+    [`& .${classes.dialog}`]: {
         float: 'center',
         alignItems: 'center',
     },
-    invoiceTable: {
+
+    [`& .${classes.invoiceTable}`]: {
         '& td': {
             fontSize: theme.typography.fontSize * 1.5,
         },
     },
-    uniqueCell: {
+
+    [`& .${classes.uniqueCell}`]: {
         borderTop: '1px solid #000000',
         fontWeight: 'bold',
     },
-    mainTitle: {
+
+    [`& .${classes.mainTitle}`]: {
         paddingLeft: 0,
         marginTop: theme.spacing(3),
     },
-    titleWrapper: {
+
+    [`& .${classes.titleWrapper}`]: {
         marginBottom: theme.spacing(3),
     },
-    typography: {
+
+    [`& .${classes.typography}`]: {
         padding: theme.spacing(2),
     },
-    root: {
+
+    [`& .${classes.root}`]: {
         flexGrow: 1,
     },
-    InfoToolTip: {
+
+    [`& .${classes.InfoToolTip}`]: {
         backgroundColor: theme.custom.disableColor,
         color: theme.palette.getContrastText(theme.custom.disableColor),
         fontSize: theme.typography.fontSize,
@@ -143,12 +198,13 @@ const styles = (theme) => ({
         borderRadius: theme.shape.borderRadius,
         padding: theme.spacing(2),
     },
-    subscriberHeader: {
+
+    [`& .${classes.subscriberHeader}`]: {
         fontSize: theme.typography.h6.fontSize,
         color: theme.typography.h6.color,
         fontWeight: theme.typography.h6.fontWeight,
-    },
-});
+    }
+}));
 
 const subscriptionStatus = {
     BLOCKED: 'BLOCKED',
@@ -206,28 +262,22 @@ function SubscriptionTablePagination(props) {
         <div
             style={{ display: 'flex' }}
         >
-            <IconButton
-                onClick={handleFirstPageButtonClick}
-                disabled={page === 0}
-            >
+            <IconButton onClick={handleFirstPageButtonClick} disabled={page === 0} size='large'>
                 <FirstPageIcon />
             </IconButton>
-            <IconButton
-                onClick={handleBackButtonClick}
-                disabled={page === 0}
-            >
+            <IconButton onClick={handleBackButtonClick} disabled={page === 0} size='large'>
                 <KeyboardArrowLeft />
             </IconButton>
             <IconButton
                 onClick={handleNextButtonClick}
                 disabled={page >= Math.ceil(count / rowsPerPage) - 1}
-            >
+                size='large'>
                 <KeyboardArrowRight />
             </IconButton>
             <IconButton
                 onClick={handleLastPageButtonClick}
                 disabled={page >= Math.ceil(count / rowsPerPage) - 1}
-            >
+                size='large'>
                 <LastPageIcon />
             </IconButton>
         </div>
@@ -253,11 +303,9 @@ class SubscriptionsTable extends Component {
         this.api = props.api;
         this.state = {
             subscriptions: null,
-            totalSubscription: 0,
             page: 0,
             rowsPerPage: 5,
             searchQuery: null,
-            rowsPerPageOptions: [5, 10, 25, 50, 100],
             emptyColumnHeight: 60,
             policies: [],
             subscriberClaims: null,
@@ -289,7 +337,6 @@ class SubscriptionsTable extends Component {
      * @memberof SubscriptionsTable
      */
     getSubscriptionBlockingButtons(state, subscriptionId) {
-        const { classes } = this.props;
         if (state === subscriptionStatus.PROD_BLOCKED) {
             return (
                 <dev>
@@ -578,12 +625,19 @@ class SubscriptionsTable extends Component {
         const api = new API();
         const { page, rowsPerPage, searchQuery } = this.state;
         const { intl } = this.props;
-        const promisedSubscriptions = api.subscriptions(this.api.id, page * rowsPerPage, rowsPerPage, searchQuery);
+        const { maxSubscriptionLimit } = Configurations.apis;
+        const promisedSubscriptions = api.subscriptions(
+            this.api.id, 
+            page * rowsPerPage, 
+            maxSubscriptionLimit, 
+            searchQuery
+        );
         promisedSubscriptions
             .then((response) => {
                 for (let i = 0; i < response.body.list.length; i++) {
                     const { subscriptionId } = response.body.list[i];
                     response.body.list[i].name = response.body.list[i].applicationInfo.name;
+                    response.body.list[i].subscriber = response.body.list[i].applicationInfo.subscriber;
                     const promisedInfo = api.getSubscriberInfo(subscriptionId);
                     promisedInfo
                         .then((resp) => {
@@ -604,7 +658,6 @@ class SubscriptionsTable extends Component {
                 }
                 this.setState({
                     subscriptions: response.body.list,
-                    totalSubscription: response.body.pagination.total,
                 });
             })
             .catch((errorMessage) => {
@@ -652,7 +705,6 @@ class SubscriptionsTable extends Component {
      * Render claims based on the claim object
      */
     renderClaims(claimsObject) {
-        const { classes } = this.props;
         if (claimsObject) {
             return (
                 <div className={classes.root}>
@@ -703,13 +755,12 @@ class SubscriptionsTable extends Component {
      */
     render() {
         const {
-            subscriptions, page, rowsPerPage, totalSubscription, rowsPerPageOptions, emptyColumnHeight,
-            subscriberClaims,
+            subscriptions, rowsPerPage, emptyColumnHeight, subscriberClaims,
         } = this.state;
-        const { classes, api } = this.props;
+        const {  api } = this.props;
         if (!subscriptions) {
             return (
-                <Grid container direction='row' justify='center' alignItems='center'>
+                <Grid container direction='row' justifyContent='center' alignItems='center'>
                     <Grid item>
                         <CircularProgress />
                     </Grid>
@@ -732,7 +783,7 @@ class SubscriptionsTable extends Component {
                 },
             },
             {
-                name: 'applicationInfo.subscriber',
+                name: 'subscriber',
                 label: (
                     <FormattedMessage
                         id='Apis.Details.Subscriptions.Listing.column.header.subscriber'
@@ -759,13 +810,13 @@ class SubscriptionsTable extends Component {
                                             tooltip: classes.InfoToolTip,
                                         }}
                                         title={(
-                                            <>
+                                            (<Root>
                                                 {subscriberClaims && (
                                                     <div>
                                                         {this.renderClaims(claimsObject)}
                                                     </div>
                                                 )}
-                                            </>
+                                            </Root>)
                                         )}
                                     >
                                         <Grid container direction='row' alignItems='center' spacing={1}>
@@ -774,15 +825,40 @@ class SubscriptionsTable extends Component {
                                                     <InfoIcon color='action' />
                                                 </Typography>
                                             </Grid>
-                                            <Grid item>
-                                                {value}
-                                            </Grid>
                                         </Grid>
                                     </Tooltip>
                                 </Box>
                             );
                         }
                         return null;
+                    },
+                    filter: true,
+                    display: true,
+                    filterType: 'custom',
+                    filterOptions: {
+                        logic: (sub, filters) => {
+                            if (filters.length) return !filters.includes(sub);
+                            return false;
+                        },
+                        display: (filterList, onChange, index, column) => {
+                            return (<Autocomplete
+                                id={`autocomplete-filter-${column.name}`}
+                                options={Array.from(new Set(subscriptions.map((sub) => sub.subscriber)))}
+                                value={filterList[index][0] ? filterList[index][0] : null}
+                                onChange={(event, newValue) => {
+                                    const updatedFilterList = [...filterList];
+                                    updatedFilterList[index] = newValue ? [newValue] : [];
+                                    onChange(updatedFilterList[index], index, column);
+                                }}
+                                renderInput={(params) => (
+                                    <TextField
+                                        margin='dense'
+                                        {...params}
+                                        label={column.name}
+                                    />
+                                )}
+                            />);
+                        },
                     },
                 },
             },
@@ -796,6 +872,34 @@ class SubscriptionsTable extends Component {
                 ),
                 options: {
                     sort: false,
+                    filter: true,
+                    display: true,
+                    filterType: 'custom',
+                    filterOptions: {
+                        logic: (app, filters) => {
+                            if (filters.length) return !filters.includes(app);
+                            return false;
+                        },
+                        display: (filterList, onChange, index, column) => {
+                            return (<Autocomplete
+                                id={`autocomplete-filter-${column.name}`}
+                                options={Array.from(new Set(subscriptions.map((sub) => sub.name)))}
+                                value={filterList[index][0] ? filterList[index][0] : null}
+                                onChange={(event, newValue) => {
+                                    const updatedFilterList = [...filterList];
+                                    updatedFilterList[index] = newValue ? [newValue] : [];
+                                    onChange(updatedFilterList[index], index, column);
+                                }}
+                                renderInput={(params) => (
+                                    <TextField
+                                        margin='dense'
+                                        {...params}
+                                        label='Application'
+                                    />
+                                )}
+                            />);
+                        },
+                    },
                 },
             },
             {
@@ -822,6 +926,34 @@ class SubscriptionsTable extends Component {
                 ),
                 options: {
                     sort: false,
+                    filter: true,
+                    display: true,
+                    filterType: 'custom',
+                    filterOptions: {
+                        logic: (tier, filters) => {
+                            if (filters.length) return !filters.includes(tier);
+                            return false;
+                        },
+                        display: (filterList, onChange, index, column) => {
+                            return (<Autocomplete
+                                id={`autocomplete-filter-${column.name}`}
+                                options={Array.from(new Set(subscriptions.map((sub) => sub.throttlingPolicy)))}
+                                value={filterList[index][0] ? filterList[index][0] : null}
+                                onChange={(event, newValue) => {
+                                    const updatedFilterList = [...filterList];
+                                    updatedFilterList[index] = newValue ? [newValue] : [];
+                                    onChange(updatedFilterList[index], index, column);
+                                }}
+                                renderInput={(params) => (
+                                    <TextField
+                                        margin='dense'
+                                        {...params}
+                                        label='Tier'
+                                    />
+                                )}
+                            />);
+                        },
+                    },
                 },
             },
             {
@@ -909,20 +1041,7 @@ class SubscriptionsTable extends Component {
             search: false,
             selectableRows: 'none',
             rowsPerPageOptions: [5, 10, 25, 50, 100],
-            customFooter: (count, muiPage, muiRowsPerPage, changeRowsPerPage) => {
-                return (
-                    <TablePagination
-                        rowsPerPageOptions={rowsPerPageOptions}
-                        colSpan={6}
-                        count={totalSubscription}
-                        rowsPerPage={rowsPerPage}
-                        page={page}
-                        onChangePage={this.handleChangePage}
-                        onChangeRowsPerPage={(e) => this.handleChangeRowsPerPage(e, changeRowsPerPage)}
-                        ActionsComponent={SubscriptionTablePagination}
-                    />
-                );
-            },
+            rowsPerPage,
         };
         const subMails = {};
         const emails = subscriberClaims && Object.entries(subscriberClaims).map(([, v]) => {
@@ -950,7 +1069,7 @@ class SubscriptionsTable extends Component {
         }
         const Tip = names ? React.Fragment : Tooltip;
         return (
-            <>
+            <Root>
                 <div className={classes.heading}>
                     <Typography variant='h4'>
                         <FormattedMessage
@@ -998,7 +1117,7 @@ class SubscriptionsTable extends Component {
                             </div>
                         )}
                 </Paper>
-            </>
+            </Root>
         );
     }
 }
@@ -1011,4 +1130,4 @@ SubscriptionsTable.propTypes = {
     intl: PropTypes.shape({}).isRequired,
 };
 
-export default injectIntl(withStyles(styles)(SubscriptionsTable));
+export default injectIntl((SubscriptionsTable));

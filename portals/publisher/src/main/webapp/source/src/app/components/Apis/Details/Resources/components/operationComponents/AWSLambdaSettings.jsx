@@ -17,19 +17,72 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { styled } from '@mui/material/styles';
 import PropTypes from 'prop-types';
 import deburr from 'lodash/deburr';
 import Downshift from 'downshift';
-import { makeStyles } from '@material-ui/core/styles';
-import Grid from '@material-ui/core/Grid';
-import Divider from '@material-ui/core/Divider';
-import TextField from '@material-ui/core/TextField';
-import Typography from '@material-ui/core/Typography';
-import Paper from '@material-ui/core/Paper';
-import MenuItem from '@material-ui/core/MenuItem';
-import InputAdornment from '@material-ui/core/InputAdornment';
-import Icon from '@material-ui/core/Icon';
+import Grid from '@mui/material/Grid';
+import Divider from '@mui/material/Divider';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import Paper from '@mui/material/Paper';
+import MenuItem from '@mui/material/MenuItem';
+import InputAdornment from '@mui/material/InputAdornment';
+import Icon from '@mui/material/Icon';
+import Checkbox from '@mui/material/Checkbox';
+import FormControl from '@mui/material/FormControl';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import FormHelperText from '@mui/material/FormHelperText';
 import { FormattedMessage } from 'react-intl';
+
+const PREFIX = 'AWSLambdaSettings';
+
+const classes = {
+    root: `${PREFIX}-root`,
+    container: `${PREFIX}-container`,
+    paper: `${PREFIX}-paper`,
+    chip: `${PREFIX}-chip`,
+    inputRoot: `${PREFIX}-inputRoot`,
+    inputInput: `${PREFIX}-inputInput`
+};
+
+
+const Root = styled('div')((
+    {
+        theme
+    }
+) => ({
+    [`& .${classes.root}`]: {
+        flexGrow: 1,
+        border: '2px solid red'
+    },
+
+    [`& .${classes.container}`]: {
+        flexGrow: 1,
+        position: 'relative',
+    },
+
+    [`& .${classes.paper}`]: {
+        position: 'absolute',
+        zIndex: 1000,
+        marginTop: theme.spacing(-2),
+        left: 0,
+        right: 0,
+    },
+
+    [`& .${classes.chip}`]: {
+        margin: theme.spacing(0.5, 0.25),
+    },
+
+    [`& .${classes.inputRoot}`]: {
+        flexWrap: 'wrap',
+    },
+
+    [`& .${classes.inputInput}`]: {
+        width: 'auto',
+        flexGrow: 1,
+    }
+}));
 
 /**
  * The renderInput function.
@@ -38,7 +91,7 @@ import { FormattedMessage } from 'react-intl';
  */
 function renderInput(inputProps) {
     const {
-        InputProps, classes, ref, ...other
+        InputProps, ref, ...other
     } = inputProps;
     return (
         <TextField
@@ -119,40 +172,13 @@ function getSuggestions(value, { showEmpty = false } = {}, arns) {
         });
 }
 
-const useStyles = makeStyles((theme) => ({
-    root: {
-        flexGrow: 1,
-    },
-    container: {
-        flexGrow: 1,
-        position: 'relative',
-    },
-    paper: {
-        position: 'absolute',
-        zIndex: 1000,
-        marginTop: theme.spacing(-2),
-        left: 0,
-        right: 0,
-    },
-    chip: {
-        margin: theme.spacing(0.5, 0.25),
-    },
-    inputRoot: {
-        flexWrap: 'wrap',
-    },
-    inputInput: {
-        width: 'auto',
-        flexGrow: 1,
-    },
-}));
-
 /**
  * The autocomplete component. This component lists the ARNs of a specific user role.
  * @returns {any} HTML view of the autocomplete component.
  * @param {any} props The input parameters.
  */
 export default function IntegrationDownshift(props) {
-    const classes = useStyles();
+
     const {
         operation,
         operationsDispatcher,
@@ -161,9 +187,13 @@ export default function IntegrationDownshift(props) {
         arns,
     } = props;
     const [timeout, setTimeout] = useState(50000);
+    const [isBase64Encoded, setIsBase64Encoded] = useState(operation['x-amzn-resource-content-encode']);
     useEffect(() => {
         if (operation['x-amzn-resource-timeout']) {
             setTimeout(operation['x-amzn-resource-timeout']);
+        }
+        if (operation['x-amzn-resource-content-encode']) {
+            setIsBase64Encoded(operation['x-amzn-resource-content-encode']);
         }
     }, []);
     const handleTimeoutMin = (event) => {
@@ -206,8 +236,16 @@ export default function IntegrationDownshift(props) {
             });
         }
     };
+    const handleIsBase64Encoded = (event) => {
+        setIsBase64Encoded(event.target.checked);
+        operationsDispatcher({
+            action: 'amznResourceContentEncode',
+            data: { target, verb, value: event.target.checked },
+        });
+        console.log('changing content encode ' + event.target.checked + ' dispatched');
+    };
     return (
-        <>
+        (<Root>
             <Grid item md={12} xs={12}>
                 <Typography variant='subtitle1'>
                     <FormattedMessage
@@ -218,7 +256,7 @@ export default function IntegrationDownshift(props) {
                 </Typography>
             </Grid>
             <Grid item md={1} xs={1} />
-            <Grid item md={7} xs={7}>
+            <Grid item md={6} xs={6}>
                 <Downshift
                     id='downshift-options'
                     onSelect={(changes) => {
@@ -339,8 +377,30 @@ export default function IntegrationDownshift(props) {
                     }}
                 />
             </Grid>
+            <Grid item md={1} xs={1}>
+                <FormControl component='fieldset' className={classes.formControl}>
+                    <FormControlLabel
+                        control={(
+                            <Checkbox
+                                checked={isBase64Encoded}
+                                value={isBase64Encoded}
+                                onChange={(event) => {
+                                    handleIsBase64Encoded(event);
+                                }}
+                            />
+                        )}
+                        label='Encode'
+                    />
+                    <FormHelperText>
+                        <FormattedMessage
+                            id='Apis.Details.Resources.components.operationComponents.AWSLambdaSettings.encode'
+                            defaultMessage='Check if request body should be base64 encoded'
+                        />
+                    </FormHelperText>
+                </FormControl>
+            </Grid>
             <Grid item md={1} xs={1} />
-        </>
+        </Root>)
     );
 }
 

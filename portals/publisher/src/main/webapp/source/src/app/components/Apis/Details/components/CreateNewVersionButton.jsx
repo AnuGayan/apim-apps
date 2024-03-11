@@ -17,45 +17,55 @@
  */
 
 import React from 'react';
-
-import LibraryAdd from '@material-ui/icons/LibraryAdd';
+import { styled } from '@mui/material/styles';
+import LibraryAdd from '@mui/icons-material/LibraryAdd';
 import PropTypes from 'prop-types';
 import { Link, withRouter } from 'react-router-dom';
-import { withStyles } from '@material-ui/core/styles';
-import Typography from '@material-ui/core/Typography';
+import Typography from '@mui/material/Typography';
 import { FormattedMessage } from 'react-intl';
 
 import { resourceMethod, resourcePath, ScopeValidation } from 'AppData/ScopeValidation';
 import VerticalDivider from 'AppComponents/Shared/VerticalDivider';
 
-const styles = (theme) => ({
-    root: {
-        height: 70,
+const PREFIX = 'CreateNewVersionButton';
+
+const classes = {
+    root: `${PREFIX}-root`,
+    backLink: `${PREFIX}-backLink`,
+    backIcon: `${PREFIX}-backIcon`,
+    backText: `${PREFIX}-backText`,
+    createNewVersionWrapper: `${PREFIX}-createNewVersionWrapper`,
+    createNewVersion: `${PREFIX}-createNewVersion`,
+    linkText: `${PREFIX}-linkText`,
+};
+
+const Root = styled('div')(({ theme }) => ({
+    [`& .${classes.root}`]: {
         background: theme.palette.background.paper,
         borderBottom: 'solid 1px ' + theme.palette.grey.A200,
         display: 'flex',
         alignItems: 'center',
     },
-    backLink: {
+    [`& .${classes.backLink}`]: {
         alignItems: 'center',
         textDecoration: 'none',
         display: 'flex',
     },
-    backIcon: {
+    [`& .${classes.backIcon}`]: {
         color: theme.palette.primary.main,
         fontSize: 56,
         cursor: 'pointer',
     },
-    backText: {
+    [`& .${classes.backText}`]: {
         color: theme.palette.primary.main,
         cursor: 'pointer',
         fontFamily: theme.typography.fontFamily,
     },
-    createNewVersionWrapper: {
+    [`& .${classes.createNewVersionWrapper}`]: {
         display: 'flex',
         justifyContent: 'flex-end',
     },
-    createNewVersion: {
+    [`& .${classes.createNewVersion}`]: {
         display: 'flex',
         flexDirection: 'column',
         textAlign: 'center',
@@ -63,10 +73,10 @@ const styles = (theme) => ({
         cursor: 'pointer',
         color: theme.custom.createNewVersionButtonColor || 'inherit',
     },
-    linkText: {
+    [`& .${classes.linkText}`]: {
         fontSize: theme.typography.fontSize,
     },
-});
+}));
 
 /**
  *
@@ -77,16 +87,17 @@ const styles = (theme) => ({
  * @constructor
  */
 function CreateNewVersionButton(props) {
-    const { api, classes } = props;
+    const { api, isAPIProduct } = props;
     return (
-        <>
+        <Root>
             {/* allowing create new version based on scopes */}
-            <ScopeValidation resourceMethod={resourceMethod.POST} resourcePath={resourcePath.API_COPY}>
+            <ScopeValidation resourceMethod={resourceMethod.POST}
+                resourcePath={isAPIProduct ? resourcePath.API_PRODUCT_COPY : resourcePath.API_COPY}>
                 <div className={classes.createNewVersionWrapper} id='create-new-version-btn'>
                     <VerticalDivider height={70} />
                     <Link
                         className={classes.createNewVersion}
-                        to={'/apis/' + api.id + '/new_version'}
+                        to={(isAPIProduct ? '/api-products/' : '/apis/') + api.id + '/new_version'}
                         style={{ minWidth: 95 }}
                     >
 
@@ -102,7 +113,7 @@ function CreateNewVersionButton(props) {
                     </Link>
                 </div>
             </ScopeValidation>
-        </>
+        </Root>
     );
 }
 
@@ -110,8 +121,8 @@ CreateNewVersionButton.propTypes = {
     api: PropTypes.shape({
         id: PropTypes.string,
     }).isRequired,
+    isAPIProduct: PropTypes.bool.isRequired,
     history: PropTypes.shape({ push: PropTypes.func }).isRequired,
-    classes: PropTypes.shape({}).isRequired,
 };
 
-export default withRouter(withStyles(styles, { withTheme: true })(CreateNewVersionButton));
+export default withRouter(CreateNewVersionButton);

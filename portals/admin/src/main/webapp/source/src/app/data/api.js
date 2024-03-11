@@ -19,6 +19,7 @@ import Utils from './Utils';
 import Resource from './Resource';
 import cloneDeep from 'lodash.clonedeep';
 import APIClientFactory from 'AppData/APIClientFactory';
+import Configurations from 'Config';
 
 /**
  * An abstract representation of an API
@@ -420,6 +421,17 @@ class API extends Resource {
     }
 
     /**
+     * Get a list of apis from all users
+     */
+    getApiList(params) {
+        return this.client.then((client) => {
+            return client.apis['APIs'].getAllAPIs(
+                params, this._requestMetaData(),
+            );
+        });
+    }
+
+    /**
      * Get Subscription Throttling Policies
      */
     getSubscritionPolicyList() {
@@ -439,6 +451,18 @@ class API extends Resource {
                 'Application'
             ].post_applications__applicationId__change_owner(
                 { owner: owner, applicationId: id },
+                this._requestMetaData(),
+            );
+        });
+    }
+
+     /**
+     * Update an api's owner
+     */
+     updateApiProvider(apiId, provider) {
+        return this.client.then((client) => {
+            return client.apis['Api Provider Change'].providerNamePost(
+                { provider: provider, apiId: apiId },
                 this._requestMetaData(),
             );
         });
@@ -470,9 +494,9 @@ class API extends Resource {
     /**
      * Add a Gateway Environment
      */
-    addGatewayEnvironment(name, displayName, description, vhosts, provider="wso2",  callback = null) {
+    addGatewayEnvironment(name, displayName, type, description, gatewayType, vhosts, provider="wso2",  callback = null) {
         return this.client.then((client) => {
-            const data = { name, displayName, description, vhosts, provider };
+            const data = { name, displayName, type, description, gatewayType, vhosts, provider };
             const payload = {
                 'Content-Type': 'application/json',
             };
@@ -487,9 +511,9 @@ class API extends Resource {
     /**
      * Update a Gateway Environment
      */
-    updateGatewayEnvironment(id, name, displayName, description, vhosts,  callback = null) {
+    updateGatewayEnvironment(id, name, displayName, type, description, gatewayType, vhosts,  callback = null) {
         return this.client.then((client) => {
-            const data = { name, displayName, description, vhosts };
+            const data = { name, displayName, type, description, gatewayType, vhosts };
             return client.apis['Environments'].put_environments__environmentId_(
                 { environmentId: id },
                 { requestBody: data },
@@ -789,6 +813,14 @@ class API extends Resource {
         });
     }
 
+    getGlobalKeyManagersList() {
+        return this.client.then((client) => {
+            return client.apis['Global Key Manager (Collection)'].get_global_key_managers(
+                this._requestMetaData(),
+            );
+        });
+    }
+
     /**
      * Discover keymanager from well known url
      */
@@ -812,9 +844,7 @@ class API extends Resource {
             );
         });
     }
-        /**
-     * Get details of an Application Throttling Policy
-     */
+
     keyManagerGet(keyManagerId) {
         return this.client.then((client) => {
             return client.apis['Key Manager (Individual)'].get_key_managers__keyManagerId_(
@@ -825,6 +855,20 @@ class API extends Resource {
     }
 
     /**
+     * Get global keymanager
+     * @param keyManagerId keymanager id
+     * @returns {*}
+     */
+        globalKeyManagerGet(keyManagerId) {
+            return this.client.then((client) => {
+                return client.apis['Global Key Manager (Individual)'].get_global_key_managers__keyManagerId_(
+                    { keyManagerId: keyManagerId },
+                    this._requestMetaData(),
+                );
+            });
+        }
+
+    /**
      * Add an Key Manager
      */
     addKeyManager(body) {
@@ -833,6 +877,24 @@ class API extends Resource {
                 'Content-Type': 'application/json',
             };
             return client.apis['Key Manager (Collection)'].post_key_managers(
+                payload,
+                { requestBody: body },
+                this._requestMetaData(),
+            );
+        });
+    }
+
+    /**
+     * Add a Global Key Manager
+     * @param body
+     * @returns {*}
+     */
+       addGlobalKeyManager(body) {
+        return this.client.then((client) => {
+            const payload = {
+                'Content-Type': 'application/json',
+            };
+            return client.apis['Global Key Manager (Collection)'].post_global_key_managers(
                 payload,
                 { requestBody: body },
                 this._requestMetaData(),
@@ -856,6 +918,27 @@ class API extends Resource {
             );
         });
     }
+
+    /**
+         * Update a Global Key Manager
+         * @param keyManagerId
+         * @param body
+         * @returns {*}
+         */
+    updateGlobalKeyManager(keyManagerId, body) {
+        return this.client.then((client) => {
+            const payload = {
+                keyManagerId: keyManagerId,
+                'Content-Type': 'application/json',
+            };
+            return client.apis['Global Key Manager (Individual)'].put_global_key_managers__keyManagerId_(
+                payload,
+                { requestBody: body },
+                this._requestMetaData(),
+            );
+        });
+    }
+
     /**
      * Delete an Key Manager
      */
@@ -869,12 +952,28 @@ class API extends Resource {
     }
 
     /**
+     * Delete a Global Key Manager
+     * @param keyManagerId
+     * @returns {*}
+     */
+        deleteGlobalKeyManager(keyManagerId) {
+            return this.client.then((client) => {
+                return client.apis['Global Key Manager (Individual)'].delete_global_key_managers__keyManagerId_(
+                    {keyManagerId:keyManagerId},
+                    this._requestMetaData(),
+                );
+            });
+        }
+    
+
+    /**
      * Get list of workflow pending requests
      */
     workflowsGet(workflowType) {
+        var limit = Configurations.app.workflows.limit;
         return this.client.then((client) => {
             return client.apis['Workflow (Collection)'].get_workflows(
-                { workflowType: workflowType },
+                { workflowType: workflowType, limit: limit },
                 this._requestMetaData(),
             );
         });

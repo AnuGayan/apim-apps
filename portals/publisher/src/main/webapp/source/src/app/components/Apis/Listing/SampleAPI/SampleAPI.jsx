@@ -17,45 +17,30 @@
  */
 
 import React, { useReducer, useState } from 'react';
-import Box from '@material-ui/core/Box';
-import Grid from '@material-ui/core/Grid';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
 import { Redirect, Link as RouterLink } from 'react-router-dom';
-import Modal from '@material-ui/core/Modal';
-import Backdrop from '@material-ui/core/Backdrop';
-import Fade from '@material-ui/core/Fade';
+import Modal from '@mui/material/Modal';
+import Fade from '@mui/material/Fade';
 import { FormattedMessage } from 'react-intl';
 import API from 'AppData/api';
 import AuthManager from 'AppData/AuthManager';
 import { usePublisherSettings } from 'AppComponents/Shared/AppContext';
 import LandingMenuItem from 'AppComponents/Apis/Listing/Landing/components/LandingMenuItem';
 import TaskState from 'AppComponents/Apis/Listing/SampleAPI/components/TaskState';
-import { makeStyles } from '@material-ui/core/styles';
-import useMediaQuery from '@material-ui/core/useMediaQuery';
-import { useTheme } from '@material-ui/core';
-
-import Link from '@material-ui/core/Link';
-import Button from '@material-ui/core/Button';
-
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material';
+import Link from '@mui/material/Link';
+import Button from '@mui/material/Button';
 import { getSampleAPIData, getSampleOpenAPI } from 'AppData/SamplePizzaShack';
 
 
-const useStyles = makeStyles({
-    modal: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    statusBox: {
-        outline: 'none',
-    },
-});
-
 const initialTaskStates = {
-    create: { inProgress: true, completed: false, errors: false },
-    update: { inProgress: false, completed: false, errors: false },
-    revision: { inProgress: false, completed: false, errors: false },
-    deploy: { inProgress: false, completed: false, errors: false },
-    publish: { inProgress: false, completed: false, errors: false },
+    create: { inProgress: true, completed: false, pending: false, errors: false },
+    update: { inProgress: false, completed: false, pending: false, errors: false },
+    revision: { inProgress: false, completed: false, pending: false, errors: false },
+    deploy: { inProgress: false, completed: false, pending: false, errors: false },
+    publish: { inProgress: false, completed: false, pending: false, errors: false },
 };
 
 const tasksReducer = (state, action) => {
@@ -79,7 +64,7 @@ const SampleAPI = (props) => {
     const [tasksStatus, tasksStatusDispatcher] = useReducer(tasksReducer, initialTaskStates);
     const [showStatus, setShowStatus] = useState(false);
     const [newSampleAPI, setNewSampleAPI] = useState();
-    const classes = useStyles();
+
     const { data: publisherSettings, isLoading } = usePublisherSettings();
     const theme = useTheme();
     const isXsOrBelow = useMediaQuery(theme.breakpoints.down('xs'));
@@ -94,6 +79,10 @@ const SampleAPI = (props) => {
             throw errors;
         }
         tasksStatusDispatcher({ name, status: { inProgress: false, completed: true } });
+        if (taskResult.body?.[0]?.status === 'CREATED') {
+            tasksStatusDispatcher({ name, status: { pending: true} });
+        }
+
         return taskResult;
     };
     /**
@@ -195,33 +184,23 @@ const SampleAPI = (props) => {
                         + 'rest.d.sample.title'}
                     defaultMessage='Deploy Sample API'
                 />
-
             </LandingMenuItem>
-
             <Modal
                 aria-labelledby='transition-modal-title'
                 aria-describedby='transition-modal-description'
-                className={classes.modal}
                 open={showStatus}
-                // onClose={handleClose}
                 closeAfterTransition
-                BackdropComponent={Backdrop}
-                BackdropProps={{
-                    timeout: 500,
-                }}
+                sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
                 <Fade in={showStatus}>
                     <Box
                         bgcolor='background.paper'
-                        borderRadius='borderRadius'
-                        width={isXsOrBelow ? 4 / 5 : 1 / 4}
-                        className={classes.statusBox}
-                        p={2}
+                        sx={{ width: `${isXsOrBelow ? 4 / 5 : 1 / 4}`, outline: 'none' }}
                     >
                         <Grid
                             container
                             direction='row'
-                            justify='center'
+                            justifyContent='center'
                             alignItems='center'
                         >
                             <TaskState
@@ -284,9 +263,16 @@ const SampleAPI = (props) => {
                                         Revision API
                                     </TaskState>
                                     <TaskState
+                                        pending={tasksStatus.deploy.pending}
                                         completed={tasksStatus.deploy.completed}
                                         errors={tasksStatus.deploy.errors}
                                         inProgress={tasksStatus.deploy.inProgress}
+                                        pendingMessage={(
+                                            <FormattedMessage
+                                                id='Apis.Listing.SampleAPI.popup.deploy.pending'
+                                                defaultMessage='API revision deployment request sent'
+                                            />
+                                        )}
                                         completedMessage={(
                                             <FormattedMessage
                                                 id='Apis.Listing.SampleAPI.popup.deploy.complete'

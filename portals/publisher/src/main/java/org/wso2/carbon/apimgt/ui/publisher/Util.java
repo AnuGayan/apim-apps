@@ -1,7 +1,5 @@
 /*
-
-
- *  Copyright (c) 2017, WSO2 LLC (http://www.wso2.org) All Rights Reserved.
+ *  Copyright (c) 2017-2023, WSO2 LLC (https://www.wso2.com).
  * 
  *  WSO2 LLC licenses this file to you under the Apache License,
  *  Version 2.0 (the "License"); you may not use this file except
@@ -16,8 +14,6 @@
  *  KIND, either express or implied.  See the License for the
  *  specific language governing permissions and limitations
  *  under the License.
-
-
  */
 package org.wso2.carbon.apimgt.ui.publisher;
 
@@ -33,6 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.wso2.carbon.apimgt.api.APIManagementException;
 import org.wso2.carbon.apimgt.impl.utils.APIUtil;
 import org.wso2.carbon.registry.api.RegistryException;
+import org.wso2.carbon.utils.CarbonUtils;
 
 /**
  * Class for the utility functions needed by the services
@@ -41,11 +38,10 @@ public class Util {
 
     /**
      * Read a json file from the directory and output as a Map object.
-     *
-     * @param path    required parameter
-     * @param context required parameter
-     * @return Map of read json file
-     * @throws FileNotFoundException
+     * @param path    path to the json file
+     * @param context servlet context of the web application
+     * @return map of read json file
+     * @throws FileNotFoundException if the file is not found in the given path
      */
     public static Map<String, Object> readJsonFile(String path, ServletContext context) throws FileNotFoundException {
         String realPath = context.getRealPath(path);
@@ -56,9 +52,8 @@ public class Util {
 
     /**
      * Returns the value in the given path of the nested tree map. <br> "." separate 2 levels in Map tree.
-     *
-     * @param json required parameter
-     * @param path required parameter
+     * @param json json object to be read
+     * @param path path to the required value separated by "." for each level
      * @return value in the given path of the nested tree map
      */
     public static Object readJsonObj(Map json, String path) {
@@ -81,9 +76,9 @@ public class Util {
     /**
      * Get the loopback (localhost) origin (scheme + hostname + port), This origin is used for making
      * internal(within the web app node), API calls.For example DCR call, Token generation, User Info, Token Introspect,
- Revoke etc.
+     * Revoke etc.
      * @param host
-     * @return String
+     * @return String loopback origin
      */
     public static String getLoopbackOrigin(String host) {
         int mgtTransportPort = APIUtil.getCarbonTransportPort("https"); // This is the actual server port (management) , Not the proxy port
@@ -155,6 +150,15 @@ public class Util {
         }
     }
 
+    public static boolean isEnableEmailUserName() {
+        boolean isEnableEmailUserName = Boolean.parseBoolean(CarbonUtils.getServerConfiguration().getFirstProperty("EnableEmailUserName"));
+        if (isEnableEmailUserName) {
+            return isEnableEmailUserName;
+        } else {
+            return false;
+        }
+    }
+
     /**
      * Deciding what to process as app context. <br>
      * If the settings.json has the following definition, <br><br>
@@ -168,10 +172,9 @@ public class Util {
      *     context: '/devportal'
      *     proxy_context_path: '/apim',
      * </pre>
-     *
-     * @param proxyContext required parameter
-     * @param context      required parameter
-     * @return String
+     * @param proxyContext proxy context path
+     * @param context      relevant app context
+     * @return returns the app context replacing the proxy context if exists
      */
     public static String getAppContextForServerUrl(String context, String proxyContext) {
         String appContext = context;

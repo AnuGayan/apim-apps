@@ -17,54 +17,74 @@
  */
 
 import React, { Component } from 'react';
-import Button from '@material-ui/core/Button';
-import Grid from '@material-ui/core/Grid';
-import FormGroup from '@material-ui/core/FormGroup';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Checkbox from '@material-ui/core/Checkbox';
+import { styled, useTheme } from '@mui/material/styles';
+import Button from '@mui/material/Button';
+import Grid from '@mui/material/Grid';
+import FormGroup from '@mui/material/FormGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
 import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
 import ApiContext from 'AppComponents/Apis/Details/components/ApiContext';
 import { injectIntl } from 'react-intl';
 import API from 'AppData/api';
-import { CircularProgress } from '@material-ui/core';
+import { CircularProgress } from '@mui/material';
 import { ScopeValidation, resourceMethod, resourcePath } from 'AppData/ScopeValidation';
 import Alert from 'AppComponents/Shared/Alert';
 import Banner from 'AppComponents/Shared/Banner';
 import PublishWithoutDeploy from 'AppComponents/Apis/Details/LifeCycle/Components/PublishWithoutDeploy';
+import PublishWithoutDeployProduct from 'AppComponents/Apis/Details/LifeCycle/Components/PublishWithoutDeployProduct';
 import Configurations from 'Config';
 import APIProduct from 'AppData/APIProduct';
+import Progress from 'AppComponents/Shared/Progress';
 import LifeCycleImage from './LifeCycleImage';
 import CheckboxLabels from './CheckboxLabels';
 import LifecyclePending from './LifecyclePending';
 import { API_SECURITY_MUTUAL_SSL_MANDATORY, API_SECURITY_OAUTH_BASIC_AUTH_API_KEY_MANDATORY }
 from '../Configuration/components/APISecurity/components/apiSecurityConstants';
 
-const styles = (theme) => ({
-    buttonsWrapper: {
+const PREFIX = 'LifeCycleUpdate';
+
+const classes = {
+    buttonsWrapper: `${PREFIX}-buttonsWrapper`,
+    stateButton: `${PREFIX}-stateButton`,
+    paperCenter: `${PREFIX}-paperCenter`,
+    subHeading: `${PREFIX}-subHeading`,
+    mandatoryStar: `${PREFIX}-mandatoryStar`
+};
+
+const StyledGrid = styled(Grid)((
+    {
+        theme
+    }
+) => ({
+    [`& .${classes.buttonsWrapper}`]: {
         marginTop: 40,
     },
-    stateButton: {
+
+    [`& .${classes.stateButton}`]: {
         marginRight: theme.spacing(),
     },
-    paperCenter: {
+
+    [`& .${classes.paperCenter}`]: {
         padding: theme.spacing(2),
         display: 'flex',
         alignItems: 'left',
         justifyContent: 'left',
     },
-    subHeading: {
+
+    [`& .${classes.subHeading}`]: {
         fontSize: '1rem',
         fontWeight: 400,
         margin: 0,
         display: 'inline-flex',
         lineHeight: '38px',
     },
-    mandatoryStar: {
+
+    [`& .${classes.mandatoryStar}`]: {
         color: theme.palette.error.main,
         marginLeft: theme.spacing(0.1),
-    },
-});
+    }
+}));
 
 /**
  *
@@ -92,6 +112,9 @@ class LifeCycleUpdate extends Component {
             pageError: null,
             isOpen: false,
             deploymentsAvailable: false,
+            isMandatoryPropertiesAvailable: false,
+            loading: true,
+            isMandatoryPropertiesConfigured: false,
         };
         this.setIsOpen = this.setIsOpen.bind(this);
         this.handleClick = this.handleClick.bind(this);
@@ -99,15 +122,51 @@ class LifeCycleUpdate extends Component {
 
     /**
      *
-     * Set Deployment availability
+     * Set Deployment & Mandatory Properties availability
      */
     componentDidMount() {
+        this.fetchData();
+    }
+
+    fetchData() {
         const {
             api: { id: apiUUID },
         } = this.props;
-        this.api.getRevisionsWithEnv(apiUUID).then((result) => {
-            this.setState({ deploymentsAvailable: result.body.count > 0 });
-        });
+        const { api } = this.context;
+
+        this.api.getRevisionsWithEnv(apiUUID)
+            .then((result) => {
+                this.setState({ deploymentsAvailable: result.body.count > 0 });
+                api.getSettings()
+                    .then((response) => {
+                        const { customProperties } = response;
+                        let isMandatoryPropertiesAvailable;
+                        if (customProperties && customProperties.length > 0) {
+                            const requiredPropertyNames = customProperties
+                                .filter(property => property.Required)
+                                .map(property => property.Name);
+                            if (requiredPropertyNames.length > 0) {
+                                this.setState({ isMandatoryPropertiesConfigured: true })
+                                isMandatoryPropertiesAvailable = requiredPropertyNames.every(propertyName => {
+                                    const property = api.additionalProperties.find(prop => prop.name === propertyName);
+                                    return property && property.value !== '';
+                                });
+                            } else {
+                                isMandatoryPropertiesAvailable = true;
+                            }
+                        } else {
+                            isMandatoryPropertiesAvailable = true;
+                        }
+                        this.setState({ isMandatoryPropertiesAvailable });
+                        this.setState({ loading: false });
+                    })
+                    .catch((error) => {
+                        console.error('Error fetching settings:', error);
+                    });
+            })
+            .catch((error) => {
+                console.error('Error fetching revisions:', error);
+            });
     }
 
     /**
@@ -130,11 +189,12 @@ class LifeCycleUpdate extends Component {
         const lifecycleChecklist = this.props.checkList.map((item) => item.value + ':' + item.checked);
         const { isAPIProduct } = this.props;
         if (isAPIProduct) {
-            promisedUpdate = this.apiProduct.updateLcState(apiUUID, action, lifecycleChecklist);
-        } else if (lifecycleChecklist.length > 0) {
-            promisedUpdate = this.api.updateLcState(apiUUID, action, lifecycleChecklist);
+            promisedUpdate = this.apiProduct.updateLcState(apiUUID, action, lifecycleChecklist.length > 0
+                ? lifecycleChecklist.toString() : lifecycleChecklist );
         } else {
-            promisedUpdate = this.api.updateLcState(apiUUID, action);
+            promisedUpdate = (lifecycleChecklist.length > 0)
+                ? this.api.updateLcState(apiUUID, action, lifecycleChecklist.toString())
+                : this.api.updateLcState(apiUUID, action);
         }
         promisedUpdate
             .then((response) => {
@@ -206,9 +266,10 @@ class LifeCycleUpdate extends Component {
             action = 'Deploy as a Prototype';
         }
         const {
-            api: { id: apiUUID, advertiseInfo },
+            api: { id: apiUUID, advertiseInfo }, isAPIProduct,
         } = this.props;
-        if (action === 'Publish' && !deploymentsAvailable && advertiseInfo && !advertiseInfo.advertised) {
+        if (action === 'Publish' && !deploymentsAvailable && ((advertiseInfo && !advertiseInfo.advertised)
+            || isAPIProduct)) {
             this.setIsOpen(true);
         } else {
             this.updateLCStateOfAPI(apiUUID, action);
@@ -221,10 +282,11 @@ class LifeCycleUpdate extends Component {
      */
     render() {
         const {
-            api, lcState, classes, theme, handleChangeCheckList, checkList, certList, isAPIProduct,
+            api, lcState, theme, handleChangeCheckList, checkList, certList, isAPIProduct,
         } = this.props;
         const lifecycleStates = [...lcState.availableTransitions];
-        const { newState, pageError, isOpen, deploymentsAvailable } = this.state;
+        const { newState, pageError, isOpen, deploymentsAvailable, isMandatoryPropertiesAvailable,
+            isMandatoryPropertiesConfigured } = this.state;
         const isWorkflowPending = api.workflowStatus && api.workflowStatus === this.WORKFLOW_STATUS.CREATED;
         const lcMap = new Map();
         lcMap.set('Published', 'Publish');
@@ -234,6 +296,8 @@ class LifeCycleUpdate extends Component {
         lcMap.set('Created', 'Create');
         lcMap.set('Retired', 'Retire');
         const isMutualSSLEnabled = api.securityScheme.includes(API_SECURITY_MUTUAL_SSL_MANDATORY);
+        const isMutualSslOnly = api.securityScheme.length === 2 && api.securityScheme.includes('mutualssl')
+            && api.securityScheme.includes(API_SECURITY_MUTUAL_SSL_MANDATORY);
         const isAppLayerSecurityMandatory = api.securityScheme.includes(
             API_SECURITY_OAUTH_BASIC_AUTH_API_KEY_MANDATORY,
         );
@@ -254,8 +318,9 @@ class LifeCycleUpdate extends Component {
             }
             if (lifecycleState.event === 'Publish') {
                 const buttonDisabled = (isMutualSSLEnabled && !isCertAvailable)
-                                    || (deploymentsAvailable && !isBusinessPlanAvailable)
-                                    || (isAPIProduct && !isBusinessPlanAvailable);
+                                    || (!isMutualSslOnly && deploymentsAvailable && !isBusinessPlanAvailable)
+                                    || (isAPIProduct && !isBusinessPlanAvailable)
+                                    || (deploymentsAvailable && !isMandatoryPropertiesAvailable);
                 // When business plans are not assigned and deployments available
 
                 return {
@@ -269,8 +334,14 @@ class LifeCycleUpdate extends Component {
             };
         });
 
+        if (this.state.loading) {
+            return (
+                <Progress />
+            )
+        }
+
         return (
-            <Grid container>
+            <StyledGrid container>
                 {isWorkflowPending ? (
                     <Grid item xs={12}>
                         <LifecyclePending currentState={lcState.state} />
@@ -297,6 +368,8 @@ class LifeCycleUpdate extends Component {
                                             isCertAvailable={isCertAvailable}
                                             isBusinessPlanAvailable={isBusinessPlanAvailable}
                                             isAPIProduct={isAPIProduct}
+                                            isMandatoryPropertiesAvailable={isMandatoryPropertiesAvailable}
+                                            isMandatoryPropertiesConfigured={isMandatoryPropertiesConfigured}
                                         />
                                     </Grid>
                                 )}
@@ -365,20 +438,25 @@ class LifeCycleUpdate extends Component {
                     </Grid>
                 )}
                 {/* end of Page error banner */}
-                <PublishWithoutDeploy
+                {isAPIProduct ? <PublishWithoutDeployProduct
                     classes={classes}
                     api={api}
                     handleClick={this.handleClick}
                     handleClose={() => this.setIsOpen(false)}
                     open={isOpen}
-                />
-            </Grid>
+                /> : <PublishWithoutDeploy
+                    classes={classes}
+                    api={api}
+                    handleClick={this.handleClick}
+                    handleClose={() => this.setIsOpen(false)}
+                    open={isOpen}
+                /> }
+            </StyledGrid>
         );
     }
 }
 
 LifeCycleUpdate.propTypes = {
-    classes: PropTypes.shape({}).isRequired,
     api: PropTypes.shape({}).isRequired,
     checkList: PropTypes.arrayOf(PropTypes.shape({})).isRequired,
     lcState: PropTypes.shape({}).isRequired,
@@ -391,4 +469,7 @@ LifeCycleUpdate.propTypes = {
 
 LifeCycleUpdate.contextType = ApiContext;
 
-export default withStyles(styles, { withTheme: true })(injectIntl(LifeCycleUpdate));
+export default (injectIntl((props) => {
+    const theme = useTheme();
+    return <LifeCycleUpdate {...props} theme={theme} />;
+}));

@@ -15,9 +15,9 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { styled } from '@mui/material/styles';
 import { isRestricted } from 'AppData/AuthManager';
 import { useAPI } from 'AppComponents/Apis/Details/components/ApiContext';
-import { makeStyles } from '@material-ui/core/styles';
 import PropTypes from 'prop-types';
 import {
     Button,
@@ -34,18 +34,40 @@ import {
     ListItemSecondaryAction,
     ListItemText,
     Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import { FormattedMessage, injectIntl } from 'react-intl';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import CircularProgress from '@mui/material/CircularProgress';
 import UploadCertificate from 'AppComponents/Apis/Details/Endpoints/GeneralConfiguration/UploadCertificate';
 import CertificateUsage from "AppComponents/Apis/Details/Endpoints/GeneralConfiguration/CertificateUsage.tsx";
 import API from '../../../../../data/api';
 
-const useStyles = makeStyles((theme) => ({
-    fileinput: {
+const PREFIX = 'Certificates';
+
+const classes = {
+    fileinput: `${PREFIX}-fileinput`,
+    dropZoneWrapper: `${PREFIX}-dropZoneWrapper`,
+    uploadedFile: `${PREFIX}-uploadedFile`,
+    certificatesHeader: `${PREFIX}-certificatesHeader`,
+    addCertificateBtn: `${PREFIX}-addCertificateBtn`,
+    certificateList: `${PREFIX}-certificateList`,
+    certDetailsHeader: `${PREFIX}-certDetailsHeader`,
+    uploadCertDialogHeader: `${PREFIX}-uploadCertDialogHeader`,
+    alertWrapper: `${PREFIX}-alertWrapper`,
+    warningIcon: `${PREFIX}-warningIcon`,
+    deleteIcon: `${PREFIX}-deleteIcon`,
+    deleteIconDisable: `${PREFIX}-deleteIconDisable`
+};
+
+const StyledGrid = styled(Grid)((
+    {
+        theme
+    }
+) => ({
+    [`& .${classes.fileinput}`]: {
         display: 'none',
     },
-    dropZoneWrapper: {
+
+    [`& .${classes.dropZoneWrapper}`]: {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
@@ -55,49 +77,60 @@ const useStyles = makeStyles((theme) => ({
             color: theme.palette.primary.main,
         },
     },
-    uploadedFile: {
+
+    [`& .${classes.uploadedFile}`]: {
         fontSize: 11,
     },
-    certificatesHeader: {
+
+    [`& .${classes.certificatesHeader}`]: {
         fontWeight: 600,
         marginTop: theme.spacing(1),
     },
-    addCertificateBtn: {
+
+    [`& .${classes.addCertificateBtn}`]: {
         borderColor: '#c4c4c4',
         borderRadius: '8px',
         borderStyle: 'dashed',
         borderWidth: 'thin',
     },
-    certificateList: {
+
+    [`& .${classes.certificateList}`]: {
         maxHeight: '250px',
         overflow: 'auto',
     },
-    certDetailsHeader: {
+
+    [`& .${classes.certDetailsHeader}`]: {
         fontWeight: '600',
     },
-    uploadCertDialogHeader: {
+
+    [`& .${classes.uploadCertDialogHeader}`]: {
         fontWeight: '600',
     },
-    alertWrapper: {
+
+    [`& .${classes.alertWrapper}`]: {
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
     },
-    warningIcon: {
+
+    [`& .${classes.warningIcon}`]: {
         marginRight: 13,
         color: theme.custom.warningColor,
         '& .material-icons': {
             fontSize: 30,
         },
     },
-    deleteIcon: {
+
+    [`& .${classes.deleteIcon}`]: {
         color: theme.palette.error.dark,
         cursor: 'pointer',
     },
-    deleteIconDisable: {
+
+    [`& .${classes.deleteIconDisable}`]: {
         color: theme.palette.disabled,
-    },
+    }
 }));
+
 /**
  * TODO: Generalize this component to work in Configuration page , upload mutual SSL certificates action
  * in source/src/app/components/Apis/Details/Configuration/components/APISecurity/components/TransportLevel.jsx ~tmkb
@@ -107,7 +140,7 @@ const useStyles = makeStyles((theme) => ({
  */
 function Certificates(props) {
     const {
-        certificates, uploadCertificate, deleteCertificate, isMutualSSLEnabled, apiId, endpoints, aliasList,
+        api, certificates, uploadCertificate, deleteCertificate, isMutualSSLEnabled, apiId, endpoints, aliasList,
     } = props;
     const [certificateList, setCertificateList] = useState([]);
     const [openCertificateDetails, setOpenCertificateDetails] = useState({ open: false, anchor: null, details: {} });
@@ -115,7 +148,7 @@ function Certificates(props) {
     const [certificateUsageDetails, setCertificateUsageDetails] = useState({ count: 0, apiList: [] });
     const [isDeleting, setDeleting] = useState(false);
     const [uploadCertificateOpen, setUploadCertificateOpen] = useState(false);
-    const classes = useStyles();
+
     const [apiFromContext] = useAPI();
 
     /**
@@ -162,8 +195,16 @@ function Certificates(props) {
     const deleteCertificateByAlias = (certificateAlias) => {
         setDeleting(true);
         deleteCertificate(certificateAlias)
-            .then(() => setCertificateToDelete({ open: false, alias: '' }))
+            .then(() => { 
+                setCertificateToDelete({ open: false, alias: '' })
+                // Remove certificateAlias from aliasList.
+                const index = aliasList.indexOf(certificateAlias);
+                if (index > -1) {
+                    aliasList.splice(index, 1);
+                }
+            })
             .finally(() => setDeleting(false));
+        
     };
 
     /**
@@ -202,7 +243,7 @@ function Certificates(props) {
     }, [certificates]);
 
     return (
-        <Grid container direction='column'>
+        <StyledGrid container direction='column'>
             {/* TODO: Add list of existing certificates */}
             <Grid>
                 <Typography className={classes.certificatesHeader}>
@@ -222,7 +263,7 @@ function Certificates(props) {
                         id='certs-add-btn'
                     >
                         <ListItemAvatar>
-                            <IconButton>
+                            <IconButton size='large'>
                                 <Icon>add</Icon>
                             </IconButton>
                         </ListItemAvatar>
@@ -242,19 +283,19 @@ function Certificates(props) {
                                         : <ListItemText primary={cert.alias} secondary={cert.endpoint} />}
 
                                     <ListItemSecondaryAction>
-                                        <IconButton edge='end'>
+                                        <IconButton edge='end' size='large'>
                                             <CertificateUsage certAlias={cert.alias}/>
                                         </IconButton>
                                         <IconButton
                                             onClick={(event) => showCertificateDetails(event, cert.alias)}
-                                        >
+                                            size='large'>
                                             <Icon>info</Icon>
                                         </IconButton>
                                         <IconButton
                                             disabled={isRestricted(['apim:api_create'], apiFromContext)}
                                             onClick={(event) => showCertificateDeleteDialog(event, cert.alias)}
                                             id='delete-cert-btn'
-                                        >
+                                            size='large'>
                                             <Icon className={isRestricted(['apim:api_create'], apiFromContext)
                                                 ? classes.deleteIconDisable : classes.deleteIcon}
                                             >
@@ -368,8 +409,9 @@ function Certificates(props) {
                 setUploadCertificateOpen={setUploadCertificateOpen}
                 uploadCertificateOpen={uploadCertificateOpen}
                 aliasList={aliasList}
+                api={api}
             />
-        </Grid>
+        </StyledGrid>
     );
 }
 
@@ -387,6 +429,7 @@ Certificates.propTypes = {
     uploadCertificate: PropTypes.func.isRequired,
     deleteCertificate: PropTypes.func.isRequired,
     apiId: PropTypes.string,
+    api: PropTypes.shape({}).isRequired,
     isMutualSSLEnabled: PropTypes.bool,
     endpoints: PropTypes.shape([]).isRequired,
     aliasList: PropTypes.shape([]).isRequired,

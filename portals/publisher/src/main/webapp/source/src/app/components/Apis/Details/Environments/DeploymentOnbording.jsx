@@ -16,66 +16,119 @@
  * under the License.
  */
 import React, { useState } from 'react';
+import { styled } from '@mui/material/styles';
 import { FormattedMessage } from 'react-intl';
-import Typography from '@material-ui/core/Typography';
-import Grid from '@material-ui/core/Grid';
-import Button from '@material-ui/core/Button';
+import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid';
+import Button from '@mui/material/Button';
 import clsx from 'clsx';
-import Paper from '@material-ui/core/Paper';
-import Box from '@material-ui/core/Box';
-import Card from '@material-ui/core/Card';
-import CardContent from '@material-ui/core/CardContent';
-import Tooltip from '@material-ui/core/Tooltip';
-import { makeStyles } from '@material-ui/core/styles';
-import TextField from '@material-ui/core/TextField';
-import MenuItem from '@material-ui/core/MenuItem';
-import AddIcon from '@material-ui/icons/Add';
-import CardHeader from '@material-ui/core/CardHeader';
+import Paper from '@mui/material/Paper';
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Tooltip from '@mui/material/Tooltip';
+import TextField from '@mui/material/TextField';
+import MenuItem from '@mui/material/MenuItem';
+import AddIcon from '@mui/icons-material/Add';
+import CardHeader from '@mui/material/CardHeader';
 import PropTypes from 'prop-types';
 import { useAppContext } from 'AppComponents/Shared/AppContext';
-import { useTheme } from '@material-ui/core';
+import { useTheme } from '@mui/material';
 import { useAPI } from 'AppComponents/Apis/Details/components/ApiContext';
-import Checkbox from '@material-ui/core/Checkbox';
-import RadioButtonUncheckedIcon from '@material-ui/icons/RadioButtonUnchecked';
-import CheckCircleIcon from '@material-ui/icons/CheckCircle';
+import Checkbox from '@mui/material/Checkbox';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { isRestricted } from 'AppData/AuthManager';
 import InlineMessage from 'AppComponents/Shared/InlineMessage';
 
-const useStyles = makeStyles((theme) => ({
-    root: {
+const PREFIX = 'DeploymentOnbording';
+
+const classes = {
+    root: `${PREFIX}-root`,
+    textOptional: `${PREFIX}-textOptional`,
+    textRevision: `${PREFIX}-textRevision`,
+    textDeploy: `${PREFIX}-textDeploy`,
+    textDescription: `${PREFIX}-textDescription`,
+    descriptionWidth: `${PREFIX}-descriptionWidth`,
+    textAlign: `${PREFIX}-textAlign`,
+    content: `${PREFIX}-content`,
+    head: `${PREFIX}-head`,
+    changeCard: `${PREFIX}-changeCard`,
+    noChangeCard: `${PREFIX}-noChangeCard`,
+    cardHeight: `${PREFIX}-cardHeight`,
+    cardContentHeight: `${PREFIX}-cardContentHeight`,
+};
+
+
+const Root = styled('div')((
+    {
+        theme
+    }
+) => ({
+    [`& .${classes.root}`]: {
         minHeight: '480px',
     },
-    textOptional: {
+
+    [`& .${classes.textOptional}`]: {
         fontSize: 'small',
         color: '#707070',
         fontWeight: '100',
     },
-    textRevision: {
+
+    [`& .${classes.textRevision}`]: {
         fontSize: '16px',
         color: '#707070',
     },
-    textDeploy: {
+
+    [`& .${classes.textDeploy}`]: {
         fontSize: '26px',
         color: '#1B3A57',
     },
-    textDescription: {
+
+    [`& .${classes.textDescription}`]: {
         fontSize: '16px',
         color: '#707070',
         fontWeight: '400',
     },
-    descriptionWidth: {
+
+    [`& .${classes.descriptionWidth}`]: {
         minWidth: '550px',
     },
-    textAlign: {
+
+    [`& .${classes.textAlign}`]: {
         textAlign: 'center',
     },
-    content: {
-        margin: `${theme.spacing(2)}px 0 ${theme.spacing(2)}px 0`,
+
+    [`& .${classes.content}`]: {
+        margin: `${theme.spacing(2)} 0 ${theme.spacing(2)} 0`,
     },
-    head: {
+
+    [`& .${classes.head}`]: {
         fontWeight: 200,
     },
+
+    [`& .${classes.changeCard}`]: {
+        boxShadow: 15,
+        borderRadius: '10px',
+        backgroundColor: theme.palette.secondary.highlight,
+    },
+
+    [`& .${classes.noChangeCard}`]: {
+        boxShadow: 15,
+        borderRadius: '10px',
+    },
+
+    [`& .${classes.cardHeight}`]: {
+        boxShadow: 1,
+        height: '100%',
+    },
+
+    [`& .${classes.cardContentHeight}`]: {
+        boxShadow: 1,
+        height: '50%',
+    },
 }));
+
 /**
  * Renders an Deployment Onboarding
  * @class Environments
@@ -83,7 +136,6 @@ const useStyles = makeStyles((theme) => ({
  */
 export default function DeploymentOnboarding(props) {
     const {
-        classes,
         getVhostHelperText,
         createDeployRevision,
         description,
@@ -91,12 +143,16 @@ export default function DeploymentOnboarding(props) {
         gatewayVendor,
         advertiseInfo,
     } = props;
-    const classes1 = useStyles();
+
     const [api] = useAPI();
     const theme = useTheme();
     const { maxCommentLength } = theme.custom;
+    const assignGateway = api.gatewayType === "wso2/synapse" ? "Regular" : "APK";
     const { settings: { environment: environments } } = useAppContext();
-    const internalGateways = environments.filter((p) => !p.provider.toLowerCase().includes('solace'));
+    const internalGatewaysFiltered = environments.filter((p) => !p.provider.toLowerCase().includes('solace'));
+    const internalGateways = api.isAPIProduct() ? environments.filter((p) => 
+        !p.provider.toLowerCase().includes('solace')) : internalGatewaysFiltered &&
+        internalGatewaysFiltered.filter((p) => p.gatewayType.toLowerCase() === assignGateway.toLowerCase());
     const externalGateways = environments.filter((p) => p.provider.toLowerCase().includes('solace'));
     const hasOnlyOneEnvironment = internalGateways.length === 1;
     const securityScheme = [...api.securityScheme];
@@ -109,9 +165,16 @@ export default function DeploymentOnboarding(props) {
     || (!isMutualSslOnly && !isTierAvailable)
     || api.workflowStatus === 'CREATED');
 
-    const defaultVhosts = internalGateways.map(
-        (e) => (e.vhosts && e.vhosts.length > 0 ? { env: e.name, vhost: e.vhosts[0].host } : undefined),
-    );
+    const defaultVhosts = internalGateways.map((e) => {
+        if (e.vhosts && e.vhosts.length > 0) {
+            return {
+                env: e.name,
+                vhost: api.isWebSocket() ? e.vhosts[0].wsHost : e.vhosts[0].host
+            };
+        } else {
+            return undefined;
+        }
+    });
 
     const [descriptionOpen, setDescriptionOpen] = useState(false);
     const [selectedEnvironment, setSelectedEnvironment] = useState(hasOnlyOneEnvironment
@@ -189,7 +252,7 @@ export default function DeploymentOnboarding(props) {
     };
 
     return (
-        <>
+        (<Root>
             <div className={classes.titleWrapper}>
                 <Typography
                     id='Apis.Details.environments.deploymentOnBoarding.typography.head'
@@ -205,20 +268,19 @@ export default function DeploymentOnboarding(props) {
                 </Typography>
                 
             </div>
-
             { api.lifeCycleStatus === 'RETIRED' ? (
                 <>
                     <Box mt={2}/>
                     <InlineMessage type='warning' height={140}>
-                        <div className={classes1.contentWrapper}>
-                            <Typography variant='h5' component='h3' className={classes1.head}>
+                        <div className={classes.contentWrapper}>
+                            <Typography variant='h5' component='h3' className={classes.head}>
                                 <FormattedMessage
                                     id='Apis.Details.environments.deploymentOnBoarding.formattedMessage.warningTitle'
                                     defaultMessage='Can not deploy retired APIs'
                                 />
                             </Typography>
                             <Box mt={1}/>
-                            <Typography component='p' className={classes1.content}>
+                            <Typography component='p' className={classes.content}>
                                 <FormattedMessage
                                     id='Apis.Details.environments.deploymentOnBoarding.formattedMessage.description'
                                     defaultMessage='It is not possible to deploy new revisions for retired APIs.'
@@ -234,8 +296,8 @@ export default function DeploymentOnboarding(props) {
                     <Grid item xs={8}>
                         <Grid container spacing={2}>
                             <Grid item xs={2} />
-                            <Grid item xs={8} className={classes1.textAlign}>
-                                <Typography variant='h6' className={classes1.textDeploy}>
+                            <Grid item xs={8} className={classes.textAlign}>
+                                <Typography variant='h6' className={classes.textDeploy}>
                                     Deploy the API
                                 </Typography>
                             </Grid>
@@ -244,8 +306,8 @@ export default function DeploymentOnboarding(props) {
                         <Box pb={2}>
                             <Grid container>
                                 <Grid item xs={2} />
-                                <Grid item xs={8} className={classes1.textAlign}>
-                                    <Typography variant='h6' className={classes1.textDescription}>
+                                <Grid item xs={8} className={classes.textAlign}>
+                                    <Typography variant='h6' className={classes.textDescription}>
                                         Deploy API to the Gateway Environment
                                     </Typography>
                                 </Grid>
@@ -253,9 +315,9 @@ export default function DeploymentOnboarding(props) {
                             </Grid>
                         </Box>
                         {(gatewayVendor === 'wso2') ? (
-                            <Paper fullWidth className={classes1.root}>
+                            <Paper fullWidth className={classes.root}>
                                 <Box p={5}>
-                                    <Typography className={classes1.textRevision}>
+                                    <Typography className={classes.textRevision}>
                                         API Gateways
                                     </Typography>
                                     <Box mt={4}>
@@ -354,8 +416,13 @@ export default function DeploymentOnboarding(props) {
                                                                             >
                                                                                 {row.vhosts.map(
                                                                                     (vhost) => (
-                                                                                        <MenuItem value={vhost.host}>
-                                                                                            {vhost.host}
+                                                                                        <MenuItem value = 
+                                                                                            {api.isWebSocket()
+                                                                                                ? vhost.wsHost 
+                                                                                                : vhost.host}>
+                                                                                            {api.isWebSocket() 
+                                                                                                ? vhost.wsHost 
+                                                                                                : vhost.host}
                                                                                         </MenuItem>
                                                                                     ),
                                                                                 )}
@@ -381,14 +448,14 @@ export default function DeploymentOnboarding(props) {
                                         >
                                             Add a description
                                         </Button>
-                                        <Typography display='inline' className={classes1.textOptional}>
+                                        <Typography display='inline' className={classes.textOptional}>
                                             (optional)
                                         </Typography>
                                         <br />
                                         {descriptionOpen && (
                                             <>
                                                 <TextField
-                                                    className={classes1.descriptionWidth}
+                                                    className={classes.descriptionWidth}
                                                     name='description'
                                                     margin='dense'
                                                     variant='outlined'
@@ -432,9 +499,9 @@ export default function DeploymentOnboarding(props) {
                                 </Box>
                             </Paper>
                         ) : (
-                            <Paper fullWidth className={classes1.root}>
+                            <Paper fullWidth className={classes.root}>
                                 <Box p={5}>
-                                    <Typography className={classes1.textRevision}>
+                                    <Typography className={classes.textRevision}>
                                         Solace Environments
                                     </Typography>
                                     <Box mt={4}>
@@ -532,14 +599,14 @@ export default function DeploymentOnboarding(props) {
                                         >
                                             Add a description
                                         </Button>
-                                        <Typography display='inline' className={classes1.textOptional}>
+                                        <Typography display='inline' className={classes.textOptional}>
                                             (optional)
                                         </Typography>
                                         <br />
                                         { descriptionOpen && (
                                             <>
                                                 <TextField
-                                                    className={classes1.descriptionWidth}
+                                                    className={classes.descriptionWidth}
                                                     name='description'
                                                     margin='dense'
                                                     variant='outlined'
@@ -587,7 +654,7 @@ export default function DeploymentOnboarding(props) {
                     </Grid>
                     <Grid item xs={2} />
                 </Grid>)}
-        </>
+        </Root>)
     );
 }
 DeploymentOnboarding.propTypes = {

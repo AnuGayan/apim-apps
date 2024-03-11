@@ -19,15 +19,15 @@
 import React, {
     useReducer, useEffect, useState, useCallback, useMemo,
 } from 'react';
-import Grid from '@material-ui/core/Grid';
-import Paper from '@material-ui/core/Paper';
+import Grid from '@mui/material/Grid';
+import Paper from '@mui/material/Paper';
 import { useAPI } from 'AppComponents/Apis/Details/components/ApiContext';
 import cloneDeep from 'lodash.clonedeep';
 import isEmpty from 'lodash/isEmpty';
 import Alert from 'AppComponents/Shared/Alert';
 import Banner from 'AppComponents/Shared/Banner';
 import API from 'AppData/api';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import CircularProgress from '@mui/material/CircularProgress';
 import PropTypes from 'prop-types';
 import { isRestricted } from 'AppData/AuthManager';
 import CONSTS from 'AppData/Constants';
@@ -197,6 +197,9 @@ export default function Resources(props) {
                 break;
             case 'amznResourceTimeout':
                 updatedOperation['x-amzn-resource-timeout'] = value;
+                break;
+            case 'amznResourceContentEncode':
+                updatedOperation['x-amzn-resource-content-encode'] = value;
                 break;
             case 'scopes': {
                 if (!updatedOperation.security) {
@@ -498,7 +501,8 @@ export default function Resources(props) {
 
     useEffect(() => {
         if (api.apitype !== 'APIProduct') {
-            API.getAllScopes()
+            const maxScopeLimit = Configurations.apis.maxScopeCount;
+            API.getAllScopes(0, maxScopeLimit)
                 .then((response) => {
                     if (response.body && response.body.list) {
                         const sharedScopesList = [];
@@ -580,7 +584,7 @@ export default function Resources(props) {
     // If you do so, You will probably get `Rendered more hooks than during the previous render.` exception
     if ((!pageError && isEmpty(openAPISpec)) || (resolvedSpec.errors.length === 0 && isEmpty(resolvedSpec.spec))) {
         return (
-            <Grid container direction='row' justify='center' alignItems='center'>
+            <Grid container direction='row' justifyContent='center' alignItems='center'>
                 <Grid item>
                     <CircularProgress disableShrink />
                 </Grid>
@@ -588,7 +592,7 @@ export default function Resources(props) {
         );
     }
     return (
-        <Grid container direction='row' justify='flex-start' spacing={2} alignItems='stretch'>
+        <Grid container direction='row' justifyContent='flex-start' spacing={2} alignItems='stretch'>
             {pageError && (
                 <Grid item md={12}>
                     <Banner onClose={() => setPageError(null)} disableActions type='error' message={pageError} />
@@ -628,7 +632,7 @@ export default function Resources(props) {
                                 <Grid
                                     container
                                     direction='column'
-                                    justify='flex-start'
+                                    justifyContent='flex-start'
                                     spacing={1}
                                     alignItems='stretch'
                                 >
@@ -677,7 +681,7 @@ export default function Resources(props) {
                     style={{ marginTop: '25px' }}
                     container
                     direction='row'
-                    justify='space-between'
+                    justifyContent='space-between'
                     alignItems='center'
                 >
                     <Grid item>

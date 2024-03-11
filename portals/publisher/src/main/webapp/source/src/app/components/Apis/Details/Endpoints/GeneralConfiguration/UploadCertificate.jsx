@@ -17,7 +17,7 @@
  */
 
 import React, { useState } from 'react';
-import { makeStyles } from '@material-ui/core/styles';
+import { styled } from '@mui/material/styles';
 import PropTypes from 'prop-types';
 import {
     Button,
@@ -29,15 +29,78 @@ import {
     Icon,
     TextField,
     Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import { FormattedMessage } from 'react-intl';
 import Dropzone from 'react-dropzone';
-import Box from '@material-ui/core/Box';
-import CircularProgress from '@material-ui/core/CircularProgress';
-import InsertDriveFileIcon from '@material-ui/icons/InsertDriveFile';
+import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import APIValidation from 'AppData/APIValidation';
 import SelectEndpoint from 'AppComponents/Apis/Details/Endpoints/GeneralConfiguration/SelectEndpoint';
 import SelectPolicies from '../../../Create/Components/SelectPolicies';
+
+const PREFIX = 'UploadCertificate';
+
+const classes = {
+    fileinput: `${PREFIX}-fileinput`,
+    dropZoneWrapper: `${PREFIX}-dropZoneWrapper`,
+    uploadedFile: `${PREFIX}-uploadedFile`,
+    certificatesHeader: `${PREFIX}-certificatesHeader`,
+    addCertificateBtn: `${PREFIX}-addCertificateBtn`,
+    certificateList: `${PREFIX}-certificateList`,
+    certDetailsHeader: `${PREFIX}-certDetailsHeader`,
+    uploadCertDialogHeader: `${PREFIX}-uploadCertDialogHeader`
+};
+
+const StyledDialog = styled(Dialog)((
+    {
+        theme
+    }
+) => ({
+    [`& .${classes.fileinput}`]: {
+        display: 'none',
+    },
+
+    [`& .${classes.dropZoneWrapper}`]: {
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        '& span.material-icons': {
+            color: theme.palette.primary.main,
+        },
+    },
+
+    [`& .${classes.uploadedFile}`]: {
+        fontSize: 11,
+    },
+
+    [`& .${classes.certificatesHeader}`]: {
+        fontWeight: 600,
+        marginTop: 20,
+    },
+
+    [`& .${classes.addCertificateBtn}`]: {
+        borderColor: '#c4c4c4',
+        borderRadius: '8px',
+        borderStyle: 'dashed',
+        borderWidth: 'thin',
+    },
+
+    [`& .${classes.certificateList}`]: {
+        maxHeight: '250px',
+        overflow: 'scroll',
+    },
+
+    [`& .${classes.certDetailsHeader}`]: {
+        fontWeight: '600',
+    },
+
+    [`& .${classes.uploadCertDialogHeader}`]: {
+        fontWeight: '600',
+    }
+}));
 
 const dropzoneStyles = {
     border: '1px dashed #c4c4c4',
@@ -50,45 +113,6 @@ const dropzoneStyles = {
     width: '100%',
     margin: '10px 0',
 };
-
-const useStyles = makeStyles((theme) => ({
-    fileinput: {
-        display: 'none',
-    },
-    dropZoneWrapper: {
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        '& span.material-icons': {
-            color: theme.palette.primary.main,
-        },
-    },
-    uploadedFile: {
-        fontSize: 11,
-    },
-    certificatesHeader: {
-        fontWeight: 600,
-        marginTop: 20,
-    },
-    addCertificateBtn: {
-        borderColor: '#c4c4c4',
-        borderRadius: '8px',
-        borderStyle: 'dashed',
-        borderWidth: 'thin',
-    },
-    certificateList: {
-        maxHeight: '250px',
-        overflow: 'scroll',
-    },
-    certDetailsHeader: {
-        fontWeight: '600',
-    },
-    uploadCertDialogHeader: {
-        fontWeight: '600',
-    },
-}));
 
 /**
  * This component is used to upload the certificates
@@ -103,6 +127,7 @@ export default function UploadCertificate(props) {
         uploadCertificateOpen,
         setUploadCertificateOpen,
         aliasList,
+        api,
     } = props;
     const [alias, setAlias] = useState('');
     const [policy, setPolicy] = useState('');
@@ -112,7 +137,7 @@ export default function UploadCertificate(props) {
     const [isEndpointEmpty, setIsEndpointEmpty] = useState(false);
     const [isPoliciesEmpty, setPoliciesEmpty] = useState(false);
     const [aliasValidity, setAliasValidity] = useState();
-    const classes = useStyles();
+
     const [isRejected, setIsRejected] = useState(false);
 
     const closeCertificateUpload = () => {
@@ -149,11 +174,17 @@ export default function UploadCertificate(props) {
         setSaving(true);
         if (isMutualSSLEnabled) {
             uploadCertificate(certificate.content, policy, alias)
-                .then(closeCertificateUpload)
+                .then(() => {
+                    closeCertificateUpload();
+                    aliasList.push(alias);
+                })
                 .finally(() => setSaving(false));
         } else {
             uploadCertificate(certificate.content, endpoint, alias)
-                .then(closeCertificateUpload)
+                .then(() => {
+                    closeCertificateUpload();
+                    aliasList.push(alias);
+                })
                 .finally(() => setSaving(false));
         }
     };
@@ -217,7 +248,7 @@ export default function UploadCertificate(props) {
 
     const iff = (condition, then, otherwise) => (condition ? then : otherwise);
     return (
-        <Dialog open={uploadCertificateOpen}>
+        <StyledDialog open={uploadCertificateOpen}>
             <DialogTitle>
                 <Typography className={classes.uploadCertDialogHeader}>
                     <FormattedMessage
@@ -229,7 +260,7 @@ export default function UploadCertificate(props) {
             <DialogContent>
                 <Grid>
                     <div>
-                        {isMutualSSLEnabled ? (
+                        {isMutualSSLEnabled && api.gatewayType === 'wso2/synapse' && (
                             <SelectPolicies
                                 multiple={false}
                                 policies={policy}
@@ -238,16 +269,16 @@ export default function UploadCertificate(props) {
                                 required
                                 validate={onValidate}
                             />
-                        )
-                            : (
-                                <SelectEndpoint
-                                    endpoints={endpoints}
-                                    onChange={handleEndpointOnChange}
-                                    endpoint={endpoint}
-                                    isEndpointEmpty={isEndpointEmpty}
-                                    required
-                                />
-                            )}
+                        )}
+                        {!isMutualSSLEnabled && (
+                            <SelectEndpoint
+                                endpoints={endpoints}
+                                onChange={handleEndpointOnChange}
+                                endpoint={endpoint}
+                                isEndpointEmpty={isEndpointEmpty}
+                                required
+                            />
+                        )}
                         <TextField
                             required
                             id='certificateAlias'
@@ -376,7 +407,7 @@ export default function UploadCertificate(props) {
                     {isSaving && <CircularProgress size={24} />}
                 </Button>
             </DialogActions>
-        </Dialog>
+        </StyledDialog>
     );
 }
 
@@ -389,6 +420,7 @@ UploadCertificate.propTypes = {
     certificates: PropTypes.shape({}).isRequired,
     uploadCertificate: PropTypes.func.isRequired,
     isMutualSSLEnabled: PropTypes.bool,
+    api: PropTypes.shape({}).isRequired,
     setUploadCertificateOpen: PropTypes.func.isRequired,
     uploadCertificateOpen: PropTypes.bool.isRequired,
     endpoints: PropTypes.shape([]),

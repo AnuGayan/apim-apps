@@ -17,41 +17,48 @@
  */
 
 import React, { useState, useEffect, useContext } from 'react';
+import { styled } from '@mui/material/styles';
 import { ApiContext } from '../ApiContext';
 import Api from '../../../../data/api';
 import Progress from '../../../Shared/Progress';
 import WebhookSubscriptionUI from './WebhookSubscriptionUI';
 import GenericSubscriptionUI from './GenericSubscriptionUI';
-import InputLabel from '@material-ui/core/InputLabel';
-import MenuItem from '@material-ui/core/MenuItem';
-import FormControl from '@material-ui/core/FormControl';
-import Select from '@material-ui/core/Select';
-import { makeStyles } from "@material-ui/core/styles/index";
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
 import CONSTANTS from 'AppData/Constants';
 import Alert from 'AppComponents/Shared/Alert';
 import { useIntl } from 'react-intl';
 
-const useStyles = makeStyles((theme) => (
-    {
-        endpointSelectorRoot: {
-            paddingBottom: '20px',
-        },
-        // this styling is used to resemble the switch to swagger-ui switch
-        selectList: {
-            minWidth: '130px',
-            maxWidth: '100%',
-            border: '2px solid #41444e',
-            fontFamily: 'sans-serif',
-            fontSize: '14px',
-            fontWeight: 700,
-            padding: '2px 2px 2px 10px',
-            borderRadius: '4px',
-            color: '#3b4151',
-        }
+const PREFIX = 'AsyncApiUI';
+
+const classes = {
+    endpointSelectorRoot: `${PREFIX}-endpointSelectorRoot`,
+    selectList: `${PREFIX}-selectList`
+};
+
+// TODO jss-to-styled codemod: The Fragment root was replaced by div. Change the tag if needed.
+const Root = styled('div')({
+    [`& .${classes.endpointSelectorRoot}`]: {
+        paddingBottom: '20px',
+    },
+    // this styling is used to resemble the switch to swagger-ui switch
+    [`& .${classes.selectList}`]: {
+        minWidth: '130px',
+        maxWidth: '100%',
+        border: '2px solid #41444e',
+        fontFamily: 'sans-serif',
+        fontSize: '14px',
+        fontWeight: 700,
+        padding: '2px 2px 2px 10px',
+        borderRadius: '4px',
+        color: '#3b4151',
     }
-));
+});
+
 export default function AsyncApiUI(props) {
-    const classes = useStyles();
+
     const intl = useIntl();
     const {
         authorizationHeader,
@@ -149,13 +156,13 @@ export default function AsyncApiUI(props) {
     function generateWSSubscriptionCommand(topic) {
         const token = generateAccessToken();
         if (topic.name.includes('*')) {
-            let wscat = `wscat -c '${endPoint}' -H 'Authorization: ${token}'`;
+            let wscat = `wscat -c '${endPoint}' -H '${securitySchemeType === 'API-KEY' ? 'apikey' : 'Authorization'}: ${token}'`;
             if (isAdvertised && authorizationHeader !== '') {
                 wscat = `wscat -c '${endPoint}' -H '${authorizationHeader}: ${token}'`;
             }
             return wscat;
         } else {
-            let wscat = `wscat -c '${endPoint}/${getTopicName(topic)}' -H 'Authorization: ${token}'`;
+            let wscat = `wscat -c '${endPoint}/${getTopicName(topic)}' -H '${securitySchemeType === 'API-KEY' ? 'apikey': 'Authorization'}: ${token}'`;
             if (isAdvertised && authorizationHeader !== '') {
                 wscat = `wscat -c '${endPoint}/${getTopicName(topic)}' -H '${authorizationHeader}: ${token}'`;
             }
@@ -201,10 +208,11 @@ export default function AsyncApiUI(props) {
         return <Progress />;
     } else {
         return (
-            <>
-                <FormControl className={classes.endpointSelectorRoot}>
+            <Root>
+                <FormControl variant="standard" className={classes.endpointSelectorRoot}>
                     <InputLabel>Servers</InputLabel>
                     <Select
+                        variant="standard"
                         className={classes.selectList}
                         id="api-endpoint-select"
                         value={endPoint}
@@ -218,7 +226,6 @@ export default function AsyncApiUI(props) {
                         })}
                     </Select>
                 </FormControl>
-
                 {api.type === CONSTANTS.API_TYPES.WEBSUB && allTopics.list.map((topic, index) => (
                     <WebhookSubscriptionUI
                         topic={topic}
@@ -247,7 +254,7 @@ export default function AsyncApiUI(props) {
                         expandable={expandable}
                     />
                 ))}
-            </>
+            </Root>
         );
     }
 }

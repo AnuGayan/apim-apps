@@ -1,8 +1,8 @@
 import React from 'react';
-import Grid from '@material-ui/core/Grid';
+import Grid from '@mui/material/Grid';
 import Alert from 'AppComponents/Shared/MuiAlert';
 import { FormattedMessage } from 'react-intl';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import CircularProgress from '@mui/material/CircularProgress';
 
 /**
  *
@@ -13,11 +13,16 @@ import CircularProgress from '@material-ui/core/CircularProgress';
  */
 export default function TaskState(props) {
     const {
-        completed, errors, inProgress, children, completedMessage, inProgressMessage,
+        pending, completed, errors, inProgress, children, pendingMessage, completedMessage, inProgressMessage,
     } = props;
     let severity;
     let message = children;
-    if (completed) {
+    if (pending) {
+        severity = 'pending';
+        if (pendingMessage) {
+            message = pendingMessage;
+        }
+    } else if (completed) {
         severity = 'success';
         if (completedMessage) {
             message = completedMessage;

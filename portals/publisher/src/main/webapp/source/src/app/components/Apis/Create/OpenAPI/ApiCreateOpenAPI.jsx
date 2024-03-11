@@ -17,18 +17,19 @@
  */
 import React, { useReducer, useState } from 'react';
 import PropTypes from 'prop-types';
-import Typography from '@material-ui/core/Typography';
-import Box from '@material-ui/core/Box';
-import Grid from '@material-ui/core/Grid';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
 import { FormattedMessage } from 'react-intl';
-import Stepper from '@material-ui/core/Stepper';
-import Step from '@material-ui/core/Step';
-import StepLabel from '@material-ui/core/StepLabel';
-import Button from '@material-ui/core/Button';
+import { usePublisherSettings } from 'AppComponents/Shared/AppContext';
+import Stepper from '@mui/material/Stepper';
+import Step from '@mui/material/Step';
+import StepLabel from '@mui/material/StepLabel';
+import Button from '@mui/material/Button';
 import { Link } from 'react-router-dom';
 import API from 'AppData/api';
 import Alert from 'AppComponents/Shared/Alert';
-import CircularProgress from '@material-ui/core/CircularProgress';
+import CircularProgress from '@mui/material/CircularProgress';
 import DefaultAPIForm from 'AppComponents/Apis/Create/Components/DefaultAPIForm';
 import APICreateBase from 'AppComponents/Apis/Create/Components/APICreateBase';
 
@@ -49,6 +50,7 @@ function apiInputsReducer(currentState, inputAction) {
         case 'name':
         case 'version':
         case 'endpoint':
+        case 'gatewayType':
         case 'context':
         case 'policies':
         case 'isFormValid':
@@ -76,7 +78,8 @@ function apiInputsReducer(currentState, inputAction) {
  */
 export default function ApiCreateOpenAPI(props) {
     const [wizardStep, setWizardStep] = useState(0);
-    const { history } = props;
+    const { history, multiGateway } = props;
+    const { data: settings } = usePublisherSettings();
 
     const [apiInputs, inputsDispatcher] = useReducer(apiInputsReducer, {
         type: 'ApiCreateOpenAPI',
@@ -117,12 +120,22 @@ export default function ApiCreateOpenAPI(props) {
     function createAPI() {
         setCreating(true);
         const {
-            name, version, context, endpoint, policies, inputValue, inputType,
+            name, version, context, endpoint, gatewayType, policies, inputValue, inputType,
         } = apiInputs;
+        let defaultGatewayType;
+        if (settings && settings.gatewayTypes.length === 1 && settings.gatewayTypes.includes('Regular')) {
+            defaultGatewayType = 'Regular';
+        } else if (settings && settings.gatewayTypes.length === 1 && settings.gatewayTypes.includes('APK')){
+            defaultGatewayType = 'APK';
+        } else {
+            defaultGatewayType = 'default';
+        }
+
         const additionalProperties = {
             name,
             version,
             context,
+            gatewayType: defaultGatewayType === 'default' ? gatewayType : defaultGatewayType,
             policies,
         };
         if (endpoint) {
@@ -174,7 +187,7 @@ export default function ApiCreateOpenAPI(props) {
                 </>
             )}
         >
-            <Box>
+            <Box sx={{ mb: 2 }}>
                 <Stepper alternativeLabel activeStep={0}>
                     <Step>
                         <StepLabel>
@@ -196,10 +209,8 @@ export default function ApiCreateOpenAPI(props) {
                 </Stepper>
             </Box>
 
-            <Grid container spacing={3}>
-                <Grid item xs={12} />
-                <Grid item xs={1} />
-                <Grid item xs={11}>
+            <Grid container spacing={2}>
+                <Grid item xs={12}>
                     {wizardStep === 0 && (
                         <ProvideOpenAPI
                             onValidate={handleOnValidate}
@@ -211,14 +222,14 @@ export default function ApiCreateOpenAPI(props) {
                         <DefaultAPIForm
                             onValidate={handleOnValidate}
                             onChange={handleOnChange}
+                            multiGateway={multiGateway}
                             api={apiInputs}
                             isAPIProduct={false}
                         />
                     )}
                 </Grid>
-                <Grid item xs={1} />
-                <Grid item xs={11}>
-                    <Grid container direction='row' justify='flex-start' alignItems='center' spacing={2}>
+                <Grid item xs={12}>
+                    <Grid container direction='row' justifyContent='flex-start' alignItems='center' spacing={2}>
                         <Grid item>
                             {wizardStep === 0 && (
                                 <Link to='/apis/'>
@@ -271,4 +282,5 @@ export default function ApiCreateOpenAPI(props) {
 
 ApiCreateOpenAPI.propTypes = {
     history: PropTypes.shape({ push: PropTypes.func }).isRequired,
+    multiGateway: PropTypes.string.isRequired,
 };

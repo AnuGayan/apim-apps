@@ -17,17 +17,29 @@
  */
 
 import React, { FC, useState } from 'react';
-import { Grid, makeStyles, Theme, Typography } from '@material-ui/core';
+import { styled } from '@mui/material/styles';
+import { Grid, Typography , Theme } from '@mui/material';
 import { useDrop } from 'react-dnd';
-import green from '@material-ui/core/colors/green';
-import red from '@material-ui/core/colors/red';
+import PolicyDropzoneShared from 'AppComponents/Shared/PoliciesUI/PolicyDropzone';
 import clsx from 'clsx';
+import { green, red } from '@mui/material/colors';
 import type { AttachedPolicy, Policy, PolicySpec } from './Types';
 import AttachedPolicyList from './AttachedPolicyList';
 import PolicyConfiguringDrawer from './PolicyConfiguringDrawer';
 
-const useStyles = makeStyles((theme: Theme) => ({
-    dropzoneDiv: {
+const PREFIX = 'PolicyDropzone';
+
+const classes = {
+    dropzoneDiv: `${PREFIX}-dropzoneDiv`,
+    acceptDrop: `${PREFIX}-acceptDrop`,
+    rejectDrop: `${PREFIX}-rejectDrop`,
+    alignLeft: `${PREFIX}-alignLeft`,
+    alignRight: `${PREFIX}-alignRight`,
+    alignCenter: `${PREFIX}-alignCenter`
+};
+
+const Root = styled('div')(({ theme }: { theme: Theme }) => ({
+    [`& .${classes.dropzoneDiv}`]: {
         border: '1px dashed',
         borderColor: theme.palette.primary.main,
         height: '8rem',
@@ -41,23 +53,28 @@ const useStyles = makeStyles((theme: Theme) => ({
         alignItems: 'center',
         overflowX: 'scroll',
     },
-    acceptDrop: {
+
+    [`& .${classes.acceptDrop}`]: {
         backgroundColor: green[50],
         borderColor: 'green',
     },
-    rejectDrop: {
+
+    [`& .${classes.rejectDrop}`]: {
         backgroundColor: red[50],
         borderColor: 'red',
     },
-    alignLeft: {
+
+    [`& .${classes.alignLeft}`]: {
         justifyContent: 'left',
     },
-    alignRight: {
+
+    [`& .${classes.alignRight}`]: {
         justifyContent: 'right',
     },
-    alignCenter: {
+
+    [`& .${classes.alignCenter}`]: {
         justifyContent: 'center',
-    },
+    }
 }));
 
 interface PolicyDropzoneProps {
@@ -71,6 +88,7 @@ interface PolicyDropzoneProps {
     target: string;
     verb: string;
     allPolicies: PolicySpec[] | null;
+    isAPILevelPolicy: boolean;
 }
 
 /**
@@ -87,8 +105,9 @@ const PolicyDropzone: FC<PolicyDropzoneProps> = ({
     target,
     verb,
     allPolicies,
+    isAPILevelPolicy,
 }) => {
-    const classes = useStyles();
+
     const [droppedPolicy, setDroppedPolicy] = useState<Policy | null>(null);
 
     const [{ canDrop }, drop] = useDrop({
@@ -100,50 +119,22 @@ const PolicyDropzone: FC<PolicyDropzoneProps> = ({
     });
 
     return (
-        <>
-            <Grid container>
-                <div
-                    ref={drop}
-                    className={clsx({
-                        [classes.dropzoneDiv]: true,
-                        [classes.acceptDrop]: canDrop,
-                        [classes.alignCenter]: currentPolicyList.length === 0,
-                        [classes.alignLeft]:
-                            currentPolicyList.length !== 0 &&
-                            policyDisplayStartDirection === 'left',
-                        [classes.alignRight]:
-                            currentPolicyList.length !== 0 &&
-                            policyDisplayStartDirection === 'right',
-                    })}
-                >
-                    {currentPolicyList.length === 0 ? (
-                        <Typography>Drag and drop policies here</Typography>
-                    ) : (
-                        <AttachedPolicyList
-                            currentPolicyList={currentPolicyList}
-                            setCurrentPolicyList={setCurrentPolicyList}
-                            policyDisplayStartDirection={
-                                policyDisplayStartDirection
-                            }
-                            currentFlow={currentFlow}
-                            target={target}
-                            verb={verb}
-                            allPolicies={allPolicies}
-                        />
-                    )}
-                </div>
-            </Grid>
-            {droppedPolicy && (
-                <PolicyConfiguringDrawer
-                    policyObj={droppedPolicy}
-                    setDroppedPolicy={setDroppedPolicy}
-                    currentFlow={currentFlow}
-                    target={target}
-                    verb={verb}
-                    allPolicies={allPolicies}
-                />
-            )}
-        </>
+        <PolicyDropzoneShared
+            policyDisplayStartDirection={policyDisplayStartDirection}
+            currentPolicyList={currentPolicyList}
+            setCurrentPolicyList={setCurrentPolicyList}
+            currentFlow={currentFlow}
+            target={target}
+            verb={verb}
+            allPolicies={allPolicies}
+            isAPILevelPolicy={isAPILevelPolicy}
+            drop={drop}
+            canDrop={canDrop}
+            droppedPolicy={droppedPolicy}
+            setDroppedPolicy={setDroppedPolicy}
+            AttachedPolicyList={AttachedPolicyList}
+            PolicyConfiguringDrawer={PolicyConfiguringDrawer}
+        />
     );
 };
 

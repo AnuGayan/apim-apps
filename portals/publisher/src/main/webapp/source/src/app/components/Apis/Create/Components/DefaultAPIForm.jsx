@@ -16,26 +16,48 @@
  * under the License.
  */
 import React, { useState, useEffect } from 'react';
+import { styled } from '@mui/material/styles';
 import PropTypes from 'prop-types';
-import TextField from '@material-ui/core/TextField';
-import Grid from '@material-ui/core/Grid';
-import { InputAdornment, IconButton, Icon } from '@material-ui/core';
-import CircularProgress from '@material-ui/core/CircularProgress';
-import Chip from '@material-ui/core/Chip';
-import Typography from '@material-ui/core/Typography';
-import { makeStyles } from '@material-ui/core/styles';
+import TextField from '@mui/material/TextField';
+import Grid from '@mui/material/Grid';
+import { InputAdornment, IconButton, Icon } from '@mui/material';
+import CircularProgress from '@mui/material/CircularProgress';
+import Chip from '@mui/material/Chip';
+import Typography from '@mui/material/Typography';
 import { FormattedMessage } from 'react-intl';
-import green from '@material-ui/core/colors/green';
 import APIValidation from 'AppData/APIValidation';
+import FormControl from '@mui/material/FormControl';
+import FormHelperText from '@mui/material/FormHelperText';
+import FormLabel from '@mui/material/FormLabel';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import API from 'AppData/api';
 import AuthManager from 'AppData/AuthManager';
+import { green } from '@mui/material/colors';
 
-const useStyles = makeStyles((theme) => ({
-    mandatoryStar: {
+const PREFIX = 'DefaultAPIForm';
+
+const classes = {
+    mandatoryStar: `${PREFIX}-mandatoryStar`,
+    helperTextContext: `${PREFIX}-helperTextContext`,
+    endpointValidChip: `${PREFIX}-endpointValidChip`,
+    endpointInvalidChip: `${PREFIX}-endpointInvalidChip`,
+    endpointErrorChip: `${PREFIX}-endpointErrorChip`,
+    iconButton: `${PREFIX}-iconButton`,
+    iconButtonValid: `${PREFIX}-iconButtonValid`,
+    radioOutline: `${PREFIX}-radioOutline`,
+    label: `${PREFIX}-label`,
+    newLabel: `${PREFIX}-newLabel`,
+};
+
+const StyledGrid = styled(Grid)(({ theme }) => ({
+    [`& .${classes.mandatoryStar}`]: {
         color: theme.palette.error.main,
         marginLeft: theme.spacing(0.1),
     },
-    helperTextContext: {
+
+    [`& .${classes.helperTextContext}`]: {
         '& p': {
             textOverflow: 'ellipsis',
             width: 400,
@@ -44,25 +66,60 @@ const useStyles = makeStyles((theme) => ({
             overflow: 'hidden',
         },
     },
-    endpointValidChip: {
+
+    [`& .${classes.endpointValidChip}`]: {
         color: 'green',
         border: '1px solid green',
     },
-    endpointInvalidChip: {
+
+    [`& .${classes.endpointInvalidChip}`]: {
         color: '#ffd53a',
         border: '1px solid #ffd53a',
     },
-    endpointErrorChip: {
+
+    [`& .${classes.endpointErrorChip}`]: {
         color: 'red',
         border: '1px solid red',
     },
-    iconButton: {
+
+    [`& .${classes.iconButton}`]: {
         padding: theme.spacing(1),
     },
-    iconButtonValid: {
+
+    [`& .${classes.iconButtonValid}`]: {
         padding: theme.spacing(1),
         color: green[500],
     },
+
+    [`& .${classes.radioOutline}`]: {
+        display: 'flex',
+        alignItems: 'center',
+        padding: '10px', // Adjust the padding for the desired outline size
+        marginTop: '10px',
+        marginLeft: '15px',
+        marginRight: '8px',
+        borderRadius: '8px', // Adjust the border-radius for a square outline
+        transition: 'border 0.3s', // Add transition for a smooth color change
+        '&.Mui-checked': {
+            border: `2px solid ${theme.palette.primary.main}`, // Change to blue when selected
+        },
+    },
+
+    [`& .${classes.label}`]: {
+        marginLeft: '10px', // Adjust as needed for spacing between the radio button and label
+    },
+
+    [`& .${classes.newLabel}`]: {
+        backgroundColor: 'green', // Blue color
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: '0.6rem',
+        padding: '2px 4px', // Adjust padding as needed
+        borderRadius: '4px', // Adjust border-radius for rounded corners
+        marginLeft: '10px', // Adjust margin as needed
+        display: 'inline-block', // Ensure inline display
+    },
+
 }));
 
 /**
@@ -109,7 +166,13 @@ function checkContext(value, result) {
     if (tenant !== null && tenant !== undefined && tenant !== 'carbon.super') {
         contextVal = '/t/' + tenant + contextVal.toLowerCase();
     }
-    if (result.find((x) => x.context.toLowerCase() === contextVal.toLowerCase()) !== undefined) {
+    if (
+        result.find(
+            (x) =>
+                x.context.toLowerCase() === contextVal.toLowerCase() ||
+                x.contextTemplate.toLowerCase() === contextVal.toLowerCase(),
+        ) !== undefined
+    ) {
         return true;
     }
     return false;
@@ -124,9 +187,10 @@ function checkContext(value, result) {
  */
 export default function DefaultAPIForm(props) {
     const {
-        onChange, onValidate, api, isAPIProduct, isWebSocket, children, appendChildrenBeforeEndpoint, hideEndpoint,
+        onChange, onValidate, api, isAPIProduct, multiGateway,
+        isWebSocket, children, appendChildrenBeforeEndpoint, hideEndpoint,
     } = props;
-    const classes = useStyles();
+
     const [validity, setValidity] = useState({});
     const [isEndpointValid, setIsEndpointValid] = useState();
     const [statusCode, setStatusCode] = useState('');
@@ -134,11 +198,17 @@ export default function DefaultAPIForm(props) {
     const [isErrorCode, setIsErrorCode] = useState(false);
     const iff = (condition, then, otherwise) => (condition ? then : otherwise);
 
+    const getBorderColor = (gatewayType) => {
+        return api.gatewayType === gatewayType
+            ? '2px solid #1976D2'
+            : '2px solid gray';
+    };
+
     // Check the provided API validity on mount, TODO: Better to use Joi schema here ~tmkb
     useEffect(() => {
         onValidate(Boolean(api.name)
-                && (isAPIProduct || Boolean(api.version))
-                && Boolean(api.context));
+            && (Boolean(api.version))
+            && Boolean(api.context));
     }, []);
 
     const updateValidity = (newState) => {
@@ -148,10 +218,9 @@ export default function DefaultAPIForm(props) {
                 .reduce((acc, cVal) => acc && cVal); // Aggregate the individual validation states
         // TODO: refactor following redundant validation.
         // The valid state should available in the above reduced state ~tmkb
-        // if isAPIProduct gets true version validation has been skipped
         isFormValid = isFormValid
             && Boolean(api.name)
-            && (isAPIProduct || Boolean(api.version))
+            && Boolean(api.version)
             && Boolean(api.context);
         onValidate(isFormValid, validity);
         setValidity(newState);
@@ -184,27 +253,78 @@ export default function DefaultAPIForm(props) {
                 break;
             }
             case 'context': {
-                const contextValidity = APIValidation.apiContext.required().validate(value, { abortEarly: false })
+                let contextValidity = APIValidation.apiContext.required().validate(value, { abortEarly: false })
                     .error;
                 const apiContext = value.startsWith('/') ? value : '/' + value;
                 if (contextValidity === null) {
-                    APIValidation.apiParameter.validate(field + ':' + apiContext).then((result) => {
-                        const count = result.body.list.length;
-                        if (count > 0 && checkContext(value, result.body.list)) {
+                    const splitContext = apiContext.split('/');
+                    for (const param of splitContext) {
+                        if (param !== null && param !== '{version}') {
+                            if (param.includes('{version}')) {
+                                contextValidity = APIValidation.apiContextWithoutKeyWords.required()
+                                    .validate(value, { abortEarly: false }).error;
+                                updateValidity({
+                                    ...validity,
+                                    // eslint-disable-next-line max-len
+                                    context: { details: [{ message: '{version} cannot exist as a substring in a path param' }] },
+                                });
+                            } else if (param.includes('{') || param.includes('}')) {
+                                contextValidity = APIValidation.apiContextWithoutKeyWords.required()
+                                    .validate(value, { abortEarly: false }).error;
+                                updateValidity({
+                                    ...validity,
+                                    // eslint-disable-next-line max-len
+                                    context: { details: [{ message: '{ or } cannot exist as a substring in a path param' }] },
+                                });
+                            }
+                        }
+                    }
+
+                    let charCount = 0;
+
+                    if (contextValidity === null) {
+                        for (const a of apiContext) {
+                            if (a === '(') {
+                                charCount++;
+                            } else if (a === ')') {
+                                charCount--;
+                            }
+                            if (charCount < 0) {
+                                updateValidity({
+                                    ...validity,
+                                    // eslint-disable-next-line max-len
+                                    context: { details: [{ message: 'Parentheses should be balanced in API context' }] },
+                                });
+                            }
+                        }
+
+                        if (charCount > 0) {
                             updateValidity({
                                 ...validity,
                                 // eslint-disable-next-line max-len
-                                context: { details: [{ message:  isWebSocket ? apiContext + ' channel already exists' : apiContext + ' context already exists' }] },
+                                context: { details: [{ message: 'Parentheses should be balanced in API context' }] },
                             });
-                        } else if (count > 0 && checkContext(value, result.body.list)) {
-                            updateValidity({
-                                ...validity,
-                                context: { details: [{ message: apiContext + ' dynamic context already exists' }] },
-                            });
-                        } else {
-                            updateValidity({ ...validity, context: contextValidity, version: null });
                         }
-                    });
+                    }
+                    if (contextValidity === null && charCount === 0) {
+                        APIValidation.apiParameter.validate(field + ':' + apiContext).then((result) => {
+                            const count = result.body.list.length;
+                            if (count > 0 && checkContext(value, result.body.list)) {
+                                updateValidity({
+                                    ...validity,
+                                    // eslint-disable-next-line max-len
+                                    context: { details: [{ message: isWebSocket ? apiContext + ' channel already exists' : apiContext + ' context already exists' }] },
+                                });
+                            } else if (count > 0 && checkContext(value, result.body.list)) {
+                                updateValidity({
+                                    ...validity,
+                                    context: { details: [{ message: apiContext + ' dynamic context already exists' }] },
+                                });
+                            } else {
+                                updateValidity({ ...validity, context: contextValidity, version: null });
+                            }
+                        });
+                    }
                 } else {
                     updateValidity({ ...validity, context: contextValidity });
                 }
@@ -252,7 +372,7 @@ export default function DefaultAPIForm(props) {
     }
 
     return (
-        <Grid item md={11}>
+        <StyledGrid item md={12}>
             <form noValidate autoComplete='off'>
                 <TextField
                     autoFocus
@@ -373,7 +493,7 @@ export default function DefaultAPIForm(props) {
                         </>
                     ) : (
                         <>
-                            <Grid item md={12}>
+                            <Grid item md={8} xs={6}>
                                 <TextField
                                     fullWidth
                                     id='context'
@@ -409,6 +529,37 @@ export default function DefaultAPIForm(props) {
                                             }))
                                         || `API Product will be exposed in ${actualContext(api)} context at the gateway`
                                     }
+                                    margin='normal'
+                                    variant='outlined'
+                                />
+                            </Grid>
+                            <Grid item md={4} xs={6}>
+                                <TextField
+                                    fullWidth
+                                    id='version'
+                                    error={Boolean(validity.version)}
+                                    label={(
+                                        <>
+                                            <FormattedMessage
+                                                id='Apis.Create.Components.DefaultAPIForm.api.product.version'
+                                                defaultMessage='Version'
+                                            />
+                                            <sup className={classes.mandatoryStar}>*</sup>
+                                        </>
+                                    )}
+                                    name='version'
+                                    value={api.version}
+                                    onChange={onChange}
+                                    InputProps={{
+                                        id: 'itest-id-apiversion-input',
+                                        onBlur: ({ target: { value } }) => {
+                                            validate('version', value);
+                                        },
+                                    }}
+                                    InputLabelProps={{
+                                        for: 'itest-id-apiversion-input',
+                                    }}
+                                    helperText={validity.version && validity.version.message}
                                     margin='normal'
                                     variant='outlined'
                                 />
@@ -460,7 +611,7 @@ export default function DefaultAPIForm(props) {
                                             aria-label='TestEndpoint'
                                             onClick={() => testEndpoint(api.endpoint)}
                                             disabled={isUpdating}
-                                        >
+                                            size='large'>
                                             {isUpdating
                                                 ? <CircularProgress size={20} />
                                                 : (
@@ -475,10 +626,64 @@ export default function DefaultAPIForm(props) {
                         }}
                     />
                 )}
-
+                {multiGateway  &&
+                    <Grid container spacing={2}>
+                        <FormControl component='fieldset'>
+                            <FormLabel sx={{ marginLeft: '15px', marginTop: '20px' }}>
+                                Select Gateway type
+                            </FormLabel>
+                            <RadioGroup
+                                row
+                                aria-label='gateway-type'
+                                name='gatewayType'
+                                value={api.gatewayType}
+                                onChange={onChange}
+                            >
+                                <Grid item xs={6}>
+                                    <FormControlLabel
+                                        value='wso2/synapse'
+                                        className={classes.radioOutline}
+                                        control={<Radio />}
+                                        label={(
+                                            <div>
+                                                <span>Regular Gateway</span>
+                                                <Typography variant='body2' color='textSecondary'>
+                                                    API gateway embedded in APIM runtime.
+                                                    Connect directly APIManager.
+                                                </Typography>
+                                            </div>
+                                        )}
+                                        sx={{ border: getBorderColor('wso2/synapse') }}
+                                    />
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <FormControlLabel
+                                        value='wso2/apk'
+                                        className={classes.radioOutline}
+                                        control={<Radio />}
+                                        label={(
+                                            <div>
+                                                <span>APK Gateway</span>
+                                                <span className={`${classes.label} ${classes.newLabel}`}>New</span> 
+                                                <Typography variant='body2' color='textSecondary'>
+                                                    Fast API gateway running on kubernetes designed to manage
+                                                    and secure APIs.
+                                                </Typography>
+                                            </div>
+                                        )}
+                                        sx={{ border: getBorderColor('wso2/apk') }}
+                                    />
+                                </Grid>
+                            </RadioGroup>
+                            <FormHelperText sx={{ marginLeft: '15px'}}>
+                                Select the gateway type where your API will run.
+                            </FormHelperText>
+                        </FormControl>
+                    </Grid>
+                }   
                 {!appendChildrenBeforeEndpoint && !!children && children}
             </form>
-            <Grid container direction='row' justify='flex-end' alignItems='center'>
+            <Grid container direction='row' justifyContent='flex-end' alignItems='center'>
                 <Grid item>
                     <Typography variant='caption' display='block' gutterBottom>
                         <sup style={{ color: 'red' }}>*</sup>
@@ -487,17 +692,18 @@ export default function DefaultAPIForm(props) {
                     </Typography>
                 </Grid>
             </Grid>
-        </Grid>
+        </StyledGrid>
     );
 }
 
 DefaultAPIForm.defaultProps = {
-    onValidate: () => {},
+    onValidate: () => { },
     api: {}, // Uncontrolled component
     isWebSocket: false,
 };
 DefaultAPIForm.propTypes = {
     api: PropTypes.shape({}),
+    multiGateway: PropTypes.string.isRequired,
     isAPIProduct: PropTypes.shape({}).isRequired,
     isWebSocket: PropTypes.shape({}),
     onChange: PropTypes.func.isRequired,

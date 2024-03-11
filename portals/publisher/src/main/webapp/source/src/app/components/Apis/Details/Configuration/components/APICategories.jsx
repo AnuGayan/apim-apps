@@ -17,32 +17,45 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { styled } from '@mui/material/styles';
 import PropTypes from 'prop-types';
-import TextField from '@material-ui/core/TextField';
+import TextField from '@mui/material/TextField';
 import { FormattedMessage } from 'react-intl';
-import MenuItem from '@material-ui/core/MenuItem';
-import ListItemText from '@material-ui/core/ListItemText';
-import Checkbox from '@material-ui/core/Checkbox';
-import Box from '@material-ui/core/Box';
-import Tooltip from '@material-ui/core/Tooltip';
-import HelpOutline from '@material-ui/icons/HelpOutline';
-import { makeStyles } from '@material-ui/core/styles';
+import Autocomplete from '@mui/material/Autocomplete';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import Checkbox from '@mui/material/Checkbox';
+import Box from '@mui/material/Box';
+import Tooltip from '@mui/material/Tooltip';
+import HelpOutline from '@mui/icons-material/HelpOutline';
 import API from 'AppData/api';
 import { useAPI } from 'AppComponents/Apis/Details/components/ApiContext';
 import { isRestricted } from 'AppData/AuthManager';
 
-const useStyles = makeStyles((theme) => ({
-    tooltip: {
+const PREFIX = 'APICategories';
+
+const classes = {
+    tooltip: `${PREFIX}-tooltip`,
+    listItemText: `${PREFIX}-listItemText`
+};
+
+const StyledBox = styled(Box)(({ theme }) => ({
+    [`& .${classes.tooltip}`]: {
         position: 'absolute',
         right: theme.spacing(-4),
         top: theme.spacing(1),
     },
-    listItemText: {
+
+    [`& .${classes.listItemText}`]: {
         whiteSpace: 'nowrap',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
-    },
+    }
 }));
+
+const icon = <CheckBoxOutlineBlankIcon fontSize='small' />;
+const checkedIcon = <CheckBoxIcon fontSize='small' />;
+
 /**
  * Render the categories drop down.
  * @param {JSON} props props passed from it's parents.
@@ -51,7 +64,7 @@ const useStyles = makeStyles((theme) => ({
 function APICategories(props) {
     const [categories, setCategories] = useState({});
     const { api, configDispatcher } = props;
-    const classes = useStyles();
+
     const [apiFromContext] = useAPI();
 
     useEffect(() => {
@@ -60,104 +73,61 @@ function APICategories(props) {
 
     if (!categories.list) {
         return null;
-    } else if (categories.list.length === 0) {
-        return (
-            <Box style={{ position: 'relative', marginTop: 10 }}>
-                <TextField
-                    fullWidth
-                    select
-                    name='Categories'
-                    id='APICategories'
-                    label={(
-                        <>
-                            <FormattedMessage
-                                id='Apis.Details.Configurations.api.categories'
-                                defaultMessage='API Categories'
-                            />
-                        </>
-                    )}
-                    margin='normal'
-                    variant='outlined'
-                    disabled
-                    value='emptyMessage'
-                >
-                    <MenuItem
-                        dense
-                        disableGutters
-                        value='emptyMessage'
-                    >
-                        <ListItemText primary={(
-                            <FormattedMessage
-                                id='Apis.Details.Configurations.api.categories.empty'
-                                defaultMessage='No API Categories defined.'
-                            />
-                        )}
-                        />
-                    </MenuItem>
-                </TextField>
-            </Box>
-        );
     } else {
         return (
-            <Box style={{ position: 'relative', marginTop: 10 }}>
-                <TextField
+            <StyledBox style={{ position: 'relative', marginTop: 10 }}>
+                <Autocomplete
+                    disabled={isRestricted(['apim:api_create', 'apim:api_publish'], apiFromContext)
+                        || categories.list.length === 0
+                    }
+                    multiple
                     fullWidth
-                    select
-                    id='APICategories'
-                    label={(
-                        <>
-                            <FormattedMessage
-                                id='Apis.Details.Configurations.api.categories'
-                                defaultMessage='API Categories'
-                            />
-                        </>
-                    )}
-                    name='categories'
-                    margin='normal'
-                    variant='outlined'
-                    disabled={isRestricted(['apim:api_create', 'apim:api_publish'], apiFromContext)}
+                    limitTags={5}
+                    id='APICategories-autocomplete'
+                    options={categories.list.map((category) => category.name)}
+                    noOptionsText='No API categories defined'
+                    disableCloseOnSelect
                     value={api.categories}
-                    SelectProps={{
-                        multiple: true,
-                        renderValue: (selected) => (Array.isArray(selected) ? selected.join(', ') : selected),
-                        MenuProps: {
-                            anchorOrigin: {
-                                vertical: 'bottom',
-                                horizontal: 'left',
-                            },
-                            getContentAnchorEl: null,
-                            keepMounted: true,
-                            PaperProps: {
-                                style: {
-                                    maxHeight: 300,
-                                    maxWidth: 300,
-                                },
-                            },
-                        },
-                    }}
-                    onChange={(e) => configDispatcher({ action: 'categories', value: e.target.value })}
-                    InputProps={{
-                        id: 'itest-id-categories-input',
-                    }}
-                    helperText='Select API Categories for the API'
-                >
-                    { categories.list.map((category) => (
-                        <MenuItem
-                            dense
-                            disableGutters
-                            id={category.id}
-                            key={category.name}
-                            value={category.name}
-                        >
-                            <Checkbox color='primary' checked={api.categories.includes(category.name)} />
-                            <ListItemText
-                                primary={category.name}
-                                secondary={category.description}
-                                classes={{ primary: classes.listItemText }}
+                    onChange={(e, newValue) => configDispatcher({ action: 'categories', value: newValue })}
+                    renderOption={(options, category, { selected }) => (
+                        <li {...options}>
+                            <Checkbox
+                                id={category}
+                                key={category}
+                                icon={icon}
+                                checkedIcon={checkedIcon}
+                                style={{ marginRight: 8 }}
+                                checked={selected}
                             />
-                        </MenuItem>
-                    ))}
-                </TextField>
+                            {category}
+                        </li>
+                    )}
+                    renderInput={(params) => (
+                        <TextField {...params}
+                            disabled={isRestricted(['apim:api_create', 'apim:api_publish'], apiFromContext)
+                                || categories.list.length === 0
+                            }
+                            fullWidth
+                            label={categories.list.length !== 0 ? (
+                                <FormattedMessage
+                                    id='Apis.Details.Configurations.api.categories'
+                                    defaultMessage='API Categories'
+                                />
+                            ) : (
+                                <FormattedMessage
+                                    id='Apis.Details.Configurations.api.categories.empty'
+                                    defaultMessage='No API Categories defined.'
+                                />
+                            )
+                            }
+                            placeholder='Search API categories'
+                            helperText='Select API Categories for the API'
+                            margin='normal'
+                            variant='outlined'
+                            id='APICategories'
+                        />
+                    )}
+                />
                 <Tooltip
                     title={(
                         <>
@@ -178,7 +148,7 @@ function APICategories(props) {
                 >
                     <HelpOutline />
                 </Tooltip>
-            </Box>
+            </StyledBox>
         );
     }
 }

@@ -1,32 +1,46 @@
 import React, { Component } from 'react';
+import { styled } from '@mui/material/styles';
 import {
     IconButton,
     Menu,
     MenuItem,
     Icon,
     Box,
-} from '@material-ui/core';
-import AccountCircle from '@material-ui/icons/AccountCircle';
-import { withStyles } from '@material-ui/core/styles';
+} from '@mui/material';
+import AccountCircle from '@mui/icons-material/AccountCircle';
 import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { FormattedMessage } from 'react-intl';
 import Configurations from 'Config';
-import ExitToAppIcon from '@material-ui/icons/ExitToApp';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import AuthManager from 'AppData/AuthManager';
 
-const styles = (theme) => ({
-    profileMenu: {
+const PREFIX = 'Avatar';
+
+const classes = {
+    profileMenu: `${PREFIX}-profileMenu`,
+    userLink: `${PREFIX}-userLink`,
+    readOnlyUserLink: `${PREFIX}-readOnlyUserLink`,
+    accountIcon: `${PREFIX}-accountIcon`,
+    root: `${PREFIX}-root`,
+    flexbox: `${PREFIX}-flexbox`
+};
+
+
+const Root = styled('div')(({ theme }) => ({
+    [`& .${classes.profileMenu}`]: {
         zIndex: theme.zIndex.modal + 1,
         paddingTop: '5px',
     },
-    userLink: {
+
+    [`& .${classes.userLink}`]: {
         color: theme.palette.getContrastText(theme.palette.background.appBar),
         fontSize: theme.typography.fontSize,
         textTransform: 'uppercase',
         fontWeight: 'bold',
     },
-    readOnlyUserLink: {
+
+    [`& .${classes.readOnlyUserLink}`]: {
         color: theme.palette.getContrastText(theme.palette.background.appBar),
         fontSize: theme.typography.fontSize,
         textTransform: 'uppercase',
@@ -35,19 +49,22 @@ const styles = (theme) => ({
         borderRadius: 20,
         borderColor: '#E57739',
     },
-    accountIcon: {
+
+    [`& .${classes.accountIcon}`]: {
         marginRight: 10,
     },
-    root: {
+
+    [`& .${classes.root}`]: {
         borderRadius: 20,
         borderColor: '#000',
     },
-    flexbox: {
+
+    [`& .${classes.flexbox}`]: {
         flex: 1,
         flexDirection: 'column',
         display: 'inline-block',
-    },
-});
+    }
+}));
 
 /**
  * Render the User Avatar with their name inside the Top AppBar component
@@ -103,22 +120,16 @@ class Avatar extends Component {
      * @memberof Avatar
      */
     render() {
-        const { classes, user } = this.props;
+        const {  user } = this.props;
         let username = user.name;
         const count = (username.match(/@/g) || []).length;
         if (user.name.endsWith('@carbon.super') && count <= 1) {
             username = user.name.replace('@carbon.super', '');
         }
-        let usr;
         const readOnlyUser = AuthManager.isReadOnlyUser();
-        if (readOnlyUser) {
-            usr = username;
-        } else {
-            usr = username;
-        }
         const { anchorEl } = this.state;
         return (
-            <>
+            <Root>
                 <IconButton
                     id='profile-menu-btn'
                     aria-owns='logout-menu'
@@ -128,10 +139,10 @@ class Avatar extends Component {
                     className={readOnlyUser ? classes.readOnlyUserLink : classes.userLink}
                     disableFocusRipple
                     disableRipple
-                >
+                    size='large'>
                     <AccountCircle className={classes.accountIcon} />
                     {' '}
-                    {usr}
+                    {username.replace('@carbon.super', '')}
                     <Icon style={{ fontSize: '22px', marginLeft: '1px' }}>
                         keyboard_arrow_down
                     </Icon>
@@ -180,17 +191,12 @@ class Avatar extends Component {
                         </MenuItem>
                     </Link>
                 </Menu>
-            </>
+            </Root>
         );
     }
 }
 Avatar.propTypes = {
-    classes: PropTypes.shape({
-        userLink: PropTypes.string,
-        profileMenu: PropTypes.string,
-        accountIcon: PropTypes.string,
-    }).isRequired,
     user: PropTypes.shape({ name: PropTypes.string.isRequired }).isRequired,
 };
 
-export default withStyles(styles)(Avatar);
+export default (Avatar);
